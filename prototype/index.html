@@ -1,0 +1,657 @@
+<title>무선망 노선도</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+/* Layout: 시안 C — 헤드라인 + 컨트롤 바, 좌측 흐름 지도(굵기·크기=지표), 우측 지표별 패널 */
+:root{
+  --bg:#FAF9F6; --surface:#FFFFFF; --ink:#18181B; --ink-2:#5B5B63; --rule:#E4E1DA; --rule-strong:#18181B; --chip:#F1EFEA;
+  --ok:#2F8F5B; --warn:#B8860B; --crit:#D2453B; --major:#DD7426; --nodata:#B3B0A8; --accent:#2F6FDB;
+  --l1:#0052A4; --l2:#00A84D; --l3:#EF7C1C; --l4:#00A5DE;
+  --t1:#2F6FDB; --t2:#D2453B; --t3:#C9971C; --t4:#8F8C85;
+  --font-body:'Noto Sans KR', system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  --font-num:'Space Grotesk', 'Noto Sans KR', system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#141416; --surface:#1D1D21; --ink:#EDEDEF; --ink-2:#A3A3AD; --rule:#34343A; --rule-strong:#EDEDEF; --chip:#26262B;
+  --ok:#4CBB7F; --warn:#E2B53B; --crit:#F0675D; --major:#F0954A; --nodata:#5D5D66; --accent:#76A5F2;
+  --l1:#4F86E0; --l2:#2FC46F; --l3:#F5964A; --l4:#38BDEB;
+  --t1:#76A5F2; --t2:#F0675D; --t3:#E2B53B; --t4:#8E8E98; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#141416; --surface:#1D1D21; --ink:#EDEDEF; --ink-2:#A3A3AD; --rule:#34343A; --rule-strong:#EDEDEF; --chip:#26262B;
+  --ok:#4CBB7F; --warn:#E2B53B; --crit:#F0675D; --major:#F0954A; --nodata:#5D5D66; --accent:#76A5F2;
+  --l1:#4F86E0; --l2:#2FC46F; --l3:#F5964A; --l4:#38BDEB;
+  --t1:#76A5F2; --t2:#F0675D; --t3:#E2B53B; --t4:#8E8E98; color-scheme:dark; }
+
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font-family:var(--font-body); font-size:14px; line-height:1.5}
+.wrap{max-width:1440px; margin:0 auto; padding-block:28px 40px; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); display:flex; flex-direction:column; gap:20px}
+.num{font-family:var(--font-num); font-variant-numeric:tabular-nums}
+button{font:inherit; color:inherit; cursor:pointer}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+header.top{display:flex; flex-wrap:wrap; justify-content:space-between; align-items:flex-end; gap:16px 24px; border-bottom:2px solid var(--rule-strong); padding-bottom:16px}
+.eyebrow{font-size:13px; font-weight:700; color:var(--ink-2); display:flex; flex-wrap:wrap; gap:4px 10px}
+h1{margin:6px 0 0; font-size:clamp(24px, 3.2vw, 36px); font-weight:900; letter-spacing:-0.02em; line-height:1.2; text-wrap:balance}
+.controls{display:flex; flex-wrap:wrap; gap:12px 16px; align-items:flex-end}
+.ctl{display:flex; flex-direction:column; gap:4px}
+.ctl-label{font-size:11px; font-weight:700; letter-spacing:.06em; color:var(--ink-2)}
+.seg{display:flex; border:2px solid var(--rule-strong); border-radius:8px; overflow:hidden}
+.seg button{min-height:40px; padding:0 14px; border:0; background:var(--surface); font-size:14px; font-weight:500}
+.seg button + button{border-left:1px solid var(--rule)}
+.seg button[aria-pressed="true"]{background:var(--ink); color:var(--bg); font-weight:700}
+
+.kpis{display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); border-bottom:1px solid var(--rule)}
+.kpi{padding:4px 20px 16px; display:flex; flex-direction:column; gap:2px; min-width:0}
+.kpi + .kpi{border-left:1px solid var(--rule)}
+.kpi:first-child{padding-left:0}
+.kpi .k{font-size:12px; color:var(--ink-2); font-weight:500}
+.kpi .v{font-size:28px; font-weight:700; line-height:1.15}
+.kpi .s{font-size:12px; color:var(--ink-2)}
+.kpi .v.crit{color:var(--crit)}
+@media (max-width:720px){ .kpis{grid-template-columns:repeat(2, minmax(0,1fr))} .kpi:nth-child(3){padding-left:0; border-left:0} }
+
+.main{display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start}
+.mapcol{flex:999 1 600px; min-width:0; display:flex; flex-direction:column; gap:10px}
+aside{flex:1 1 360px; min-width:0; display:flex; flex-direction:column; gap:28px}
+
+.mapbar{display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; align-items:center}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{min-height:36px; padding:0 12px; border-radius:18px; border:1.5px solid var(--rule); background:var(--surface); font-size:13px; font-weight:500; display:inline-flex; align-items:center; gap:6px}
+.chip[aria-pressed="true"]{border-color:var(--ink); font-weight:700}
+.dot{width:10px; height:10px; border-radius:50%; display:inline-block; flex:0 0 auto}
+.zoom{display:flex; gap:4px}
+.zoom button{width:36px; height:36px; border-radius:8px; border:1.5px solid var(--rule); background:var(--surface); font-size:16px; font-weight:700; display:flex; align-items:center; justify-content:center}
+
+.mapbox{position:relative; background:var(--surface); border-radius:16px; overflow:hidden; touch-action:none; border:1px solid var(--rule)}
+#map{display:block; width:100%; height:auto; aspect-ratio:960/660; max-width:100%; cursor:grab; user-select:none}
+#map.dragging{cursor:grabbing}
+#map text{font-family:var(--font-body); pointer-events:none}
+.st{cursor:pointer}
+.st:focus{outline:none}
+.st:focus-visible .st-ring{stroke:var(--accent); stroke-width:3}
+.seg-hit{cursor:pointer}
+.pulse{transform-box:fill-box; transform-origin:center; animation:pulse 1.6s ease-out infinite}
+@keyframes pulse{0%{transform:scale(1); opacity:.7} 100%{transform:scale(2.4); opacity:0}}
+@media (prefers-reduced-motion: reduce){ .pulse{animation:none; opacity:.35} }
+
+.legend{display:flex; flex-wrap:wrap; gap:8px 18px; font-size:12px; color:var(--ink-2); align-items:center}
+.legend .it{display:inline-flex; align-items:center; gap:6px}
+.note{font-size:12px; color:var(--ink-2); margin:0}
+
+aside h2{margin:0 0 12px; font-size:16px; font-weight:900}
+.rows{display:flex; flex-direction:column; gap:4px}
+.row{display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 10px; align-items:center; padding:8px 10px; margin:0 -10px; border-radius:8px; border:0; background:transparent; text-align:left; width:calc(100% + 20px)}
+.row:hover{background:var(--chip)}
+.row[aria-current="true"]{background:var(--chip); box-shadow:inset 0 0 0 1.5px var(--ink)}
+.row .name{font-weight:700; display:flex; align-items:center; gap:6px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+.row .sub{font-size:12px; color:var(--ink-2); font-weight:400}
+.row .val{font-weight:700; text-align:right}
+.bar{grid-column:1 / -1; height:10px; background:var(--chip); border-radius:0 3px 3px 0; position:relative}
+.bar > i{display:block; height:100%; border-radius:0 3px 3px 0}
+.bar .tick{position:absolute; top:-3px; bottom:-3px; width:0; border-left:1.5px dashed var(--ink-2)}
+.rank{font-family:var(--font-num); font-weight:700; color:var(--ink-2); width:16px; display:inline-block}
+.sev{display:inline-flex; align-items:center; justify-content:center; min-width:62px; height:22px; padding:0 8px; border-radius:11px; font-size:11px; font-weight:700; color:#FFFFFF}
+.sev.Critical{background:var(--crit)} .sev.Major{background:var(--major)} .sev.Minor{background:var(--warn)}
+.stack{display:flex; height:30px; border-radius:6px; overflow:hidden; gap:2px}
+.stack > div{display:flex; align-items:center; padding-left:8px; color:#FFFFFF; font-size:12px; font-weight:700; min-width:0; overflow:hidden}
+
+.detail{border:2px solid var(--rule-strong); border-radius:12px; padding:16px; background:var(--surface); display:flex; flex-direction:column; gap:12px}
+.detail-head{display:flex; justify-content:space-between; align-items:flex-start; gap:8px}
+.detail-head h2{margin:0; font-size:20px}
+.close{width:36px; height:36px; border-radius:8px; border:1.5px solid var(--rule); background:transparent; font-size:18px; line-height:1}
+.facts{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px}
+.fact{background:var(--chip); border-radius:8px; padding:8px 10px}
+.fact .k{font-size:11px; color:var(--ink-2)} .fact .v{font-size:18px; font-weight:700}
+.tbl{overflow-x:auto}
+table{width:100%; border-collapse:collapse; font-size:13px}
+th{font-size:11px; font-weight:700; color:var(--ink-2); text-align:left; padding:6px 6px; border-bottom:1px solid var(--rule)}
+td{padding:7px 6px; border-bottom:1px solid var(--rule); white-space:nowrap}
+td.r, th.r{text-align:right}
+.st-badge{display:inline-flex; align-items:center; gap:5px; font-weight:700}
+.insight{font-size:13px; background:var(--chip); border-radius:8px; padding:10px 12px; line-height:1.5}
+.insight b{color:var(--crit)}
+.linkbtn{min-height:44px; border-radius:8px; border:2px solid var(--ink); background:var(--ink); color:var(--bg); font-weight:700}
+.chart text{font-family:var(--font-num)}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow"><span>[서비스명] 무선망 노선도</span><span id="eyebrow-sel"></span><span id="eyebrow-asof">2026-11-10 22:00 기준</span></div>
+      <h1 id="headline">선이 굵고 붉을수록 부하가 높습니다</h1>
+    </div>
+    <div class="controls">
+      <div class="ctl"><span class="ctl-label" id="lbl-tech">기술</span>
+        <div class="seg" role="group" aria-labelledby="lbl-tech" id="ctl-tech">
+          <button type="button" id="tech-5g" data-v="5G">5G</button><button type="button" id="tech-lte" data-v="LTE">LTE</button>
+        </div></div>
+      <div class="ctl"><span class="ctl-label" id="lbl-metric">지표</span>
+        <div class="seg" role="group" aria-labelledby="lbl-metric" id="ctl-metric">
+          <button type="button" id="metric-voc" data-v="voc">VOC</button><button type="button" id="metric-load" data-v="load">부하율</button><button type="button" id="metric-alarm" data-v="alarm">장비알람</button>
+        </div></div>
+      <div class="ctl"><span class="ctl-label" id="lbl-period">기간</span>
+        <div class="seg" role="group" aria-labelledby="lbl-period" id="ctl-period">
+          <button type="button" id="period-24h" data-v="24h">24시간</button><button type="button" id="period-7d" data-v="7d">7일</button><button type="button" id="period-30d" data-v="30d">30일</button>
+        </div></div>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis" aria-label="전체 요약"></section>
+
+  <div class="main">
+    <section class="mapcol" aria-label="노선도">
+      <div class="mapbar">
+        <div class="chips" id="line-chips" role="group" aria-label="호선 필터"></div>
+        <div class="zoom">
+          <button type="button" id="zoom-in" aria-label="확대">+</button>
+          <button type="button" id="zoom-out" aria-label="축소">−</button>
+          <button type="button" id="zoom-reset" aria-label="전체 보기">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="mapbox">
+        <svg id="map" viewBox="0 0 960 660" role="group" aria-label="수도권 지하철 무선망 노선도"></svg>
+      </div>
+      <div class="legend" id="legend"></div>
+      <p class="note">가상 데이터 · 1–4호선 도심 구간만 표시 · 역 좌표는 근사값. 역이나 구간을 누르면 상세가 열립니다. 드래그로 이동, Ctrl+휠 또는 버튼으로 확대.</p>
+    </section>
+
+    <aside id="aside">
+      <section class="detail" id="detail" hidden aria-live="polite"></section>
+      <section id="panel-a"></section>
+      <section id="panel-b"></section>
+    </aside>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- 마스터 데이터 (근사 좌표) ---------- */
+var ST = {
+  SEO:['서울역',37.5547,126.9707,'l'], CHG:['시청',37.5657,126.9769,'l'], JGK:['종각',37.5702,126.9831,'b'], JR3:['종로3가',37.5715,126.9916,'t'],
+  JR5:['종로5가',37.5709,127.0019,'b'], DDM:['동대문',37.5714,127.0099,'r'], DMA:['동묘앞',37.5733,127.0166,'t'], SSD:['신설동',37.5760,127.0243,'r'],
+  AHN:['아현',37.5573,126.9560,'b'], CJR:['충정로',37.5600,126.9636,'t'], EJ1:['을지로입구',37.5660,126.9826,'b'], EJ3:['을지로3가',37.5663,126.9910,'b'],
+  EJ4:['을지로4가',37.5667,126.9981,'t'], DDP:['동대문역사문화공원',37.5653,127.0078,'b'], SDG:['신당',37.5657,127.0176,'b'], SWS:['상왕십리',37.5644,127.0293,'t'],
+  WSR:['왕십리',37.5612,127.0371,'r'], GBG:['경복궁',37.5758,126.9735,'t'], AGK:['안국',37.5765,126.9854,'t'], CMR:['충무로',37.5612,126.9942,'b'],
+  DDE:['동대입구',37.5590,127.0057,'r'], YKS:['약수',37.5543,127.0107,'r'], HSD:['한성대입구',37.5884,127.0062,'r'], HH:['혜화',37.5822,127.0019,'r'],
+  MD:['명동',37.5609,126.9863,'b'], HHY:['회현',37.5585,126.9782,'l'], SDE:['숙대입구',37.5448,126.9725,'l']
+};
+var LINES = [
+  {id:'L1', name:'1호선', c:'--l1', st:['SEO','CHG','JGK','JR3','JR5','DDM','DMA','SSD']},
+  {id:'L2', name:'2호선', c:'--l2', st:['AHN','CJR','CHG','EJ1','EJ3','EJ4','DDP','SDG','SWS','WSR']},
+  {id:'L3', name:'3호선', c:'--l3', st:['GBG','AGK','JR3','EJ3','CMR','DDE','YKS']},
+  {id:'L4', name:'4호선', c:'--l4', st:['HSD','HH','DDM','DDP','CMR','MD','HHY','SEO','SDE']}
+];
+var HOT = {HH:1.15, DDP:.92, JR3:.86, SEO:.84, CHG:.74, WSR:.72, EJ1:.68, MD:.64, DDM:.62, CMR:.6, EJ3:.56, JGK:.55};
+var VOC_TYPES = ['속도저하','끊김','접속불가','기타'];
+var TYPE_TOK = ['--t1','--t2','--t3','--t4'];
+var PERIOD_LABEL = {'24h':'최근 24시간','7d':'최근 7일','30d':'최근 30일'};
+var METRIC_LABEL = {voc:'VOC', load:'부하율', alarm:'장비알람'};
+var HEADLINE = {load:'선이 굵고 붉을수록 부하가 높습니다', voc:'원이 클수록 민원이 많습니다', alarm:'표식이 있는 곳에 미해제 알람이 있습니다'};
+var PROFILE = [.35,.25,.2,.18,.2,.35,.6,.9,1,.75,.62,.6,.65,.62,.6,.66,.78,.92,.98,1,.95,.86,.7,.5];
+
+var stationLines = {};
+LINES.forEach(function(l){ l.st.forEach(function(s){ (stationLines[s] = stationLines[s] || []).push(l.id); }); });
+var SEGS = [];
+LINES.forEach(function(l){ for (var i = 0; i < l.st.length - 1; i++){ SEGS.push({id:l.id + ':' + l.st[i] + '-' + l.st[i+1], line:l.id, a:l.st[i], b:l.st[i+1], rep:'REP-T-' + String(SEGS.length + 1).padStart(2,'0')}); } });
+var SEG_BY_ID = {}; SEGS.forEach(function(s){ SEG_BY_ID[s.id] = s; });
+var LINE_BY_ID = {}; LINES.forEach(function(l){ LINE_BY_ID[l.id] = l; });
+
+function px(id){ var s = ST[id]; return [(s[2] - 126.948) * 10000, (37.594 - s[1]) * 12600]; }
+function nm(id){ return ST[id][0]; }
+function segName(s){ return nm(s.a) + '–' + nm(s.b); }
+function cssv(t){ return 'var(' + t + ')'; }
+
+/* ---------- 가상 데이터 생성 ---------- */
+function hashStr(s){ var h = 2166136261; for (var i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed){ return function(){ seed |= 0; seed = seed + 0x6D2B79F5 | 0; var t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+var ALARMS = {
+  '5G':[
+    {id:'A-0001', sev:'Critical', st:'HH', eq:'RU-HH-03', at:'21:42'},
+    {id:'A-0002', sev:'Critical', seg:'L4:HH-DDM', at:'21:40'},
+    {id:'A-0003', sev:'Major', st:'DDP', eq:'DU-DDP-01', at:'20:15'},
+    {id:'A-0005', sev:'Major', seg:'L3:EJ3-CMR', at:'18:30'},
+    {id:'A-0004', sev:'Minor', st:'JR3', eq:'RU-JR3-01', at:'19:05'}
+  ],
+  'LTE':[
+    {id:'A-0101', sev:'Critical', st:'WSR', eq:'DU-WSR-01', at:'21:10'},
+    {id:'A-0102', sev:'Major', st:'SEO', eq:'RU-SEO-02', at:'20:48'},
+    {id:'A-0104', sev:'Minor', st:'CHG', eq:'RU-CHG-01', at:'16:05'},
+    {id:'A-0103', sev:'Minor', seg:'L2:EJ1-EJ3', at:'17:22'}
+  ]
+};
+var SEV_RANK = {Critical:0, Major:1, Minor:2};
+var SEV_TOK = {Critical:'--crit', Major:'--major', Minor:'--warn'};
+var MISSING = {'5G':{'L4:HH-DDM':true}, 'LTE':{}};
+
+var cache = {};
+function getData(tech, period){
+  var key = tech + period;
+  if (cache[key]) return cache[key];
+  var r = rng(hashStr(key));
+  var pAdj = {'24h':0, '7d':-3, '30d':-5}[period], tAdj = tech === 'LTE' ? 4 : 0;
+  var vScale = {'24h':16, '7d':84, '30d':310}[period] * (tech === 'LTE' ? 1.25 : 1);
+  var st = {}, seg = {}, eq = [];
+  Object.keys(ST).forEach(function(id){
+    var hot = HOT[id] != null ? HOT[id] : .3 + r() * .22;
+    if (tech === 'LTE' && id === 'WSR') hot += .2;
+    var load = clamp(Math.round(42 + hot * 44 + (r() - .5) * 10 + pAdj + tAdj), 12, 99);
+    var voc = Math.max(0, Math.round(hot * hot * vScale * (.7 + r() * .6)));
+    var w = [r() + .6, r() + .4, r() * .6 + .2, r() * .4 + .1];
+    if (tech === '5G' && id === 'HH') w[1] += 1.4;
+    var sw = w.reduce(function(a, b){ return a + b; }, 0), types = w.map(function(x){ return Math.round(voc * x / sw); });
+    types[3] = Math.max(0, voc - types[0] - types[1] - types[2]);
+    var ru = [
+      {id:'RU-' + id + '-01', loc:'대합실 B1', load:clamp(load - Math.round(4 + r() * 14), 5, 99)},
+      {id:'RU-' + id + '-02', loc:'승강장 B2', load:clamp(load - Math.round(1 + r() * 9), 5, 99)},
+      {id:'RU-' + id + '-03', loc:'승강장 B2', load:load},
+      {id:'DU-' + id + '-01', loc:'통신실', load:clamp(load - Math.round(10 + r() * 15), 5, 99)}
+    ];
+    ru.forEach(function(e){ e.station = id; eq.push(e); });
+    st[id] = {id:id, load:load, voc:voc, types:types, equip:ru};
+  });
+  SEGS.forEach(function(s){
+    var missing = !!MISSING[tech][s.id];
+    var v = missing ? null : clamp(Math.round((st[s.a].load + st[s.b].load) / 2 + (r() - .5) * 18), 10, 99);
+    var dist = (0.4 + r() * 0.5).toFixed(1);
+    seg[s.id] = {id:s.id, load:v, rep:s.rep, dist:dist};
+    eq.push({id:s.rep, loc:'터널 ' + segName(s), load:v, seg:s.id});
+  });
+  var alarms = ALARMS[tech].map(function(a){
+    var o = Object.assign({}, a);
+    if (a.seg){ o.eq = SEG_BY_ID[a.seg].rep; o.where = segName(SEG_BY_ID[a.seg]) + ' 터널'; o.focus = SEG_BY_ID[a.seg].a; }
+    else { o.where = nm(a.st) + (a.eq.indexOf('DU') === 0 ? ' 통신실' : ''); o.focus = a.st; }
+    return o;
+  }).sort(function(a, b){ return SEV_RANK[a.sev] - SEV_RANK[b.sev] || (a.at < b.at ? 1 : -1); });
+  var eqSev = {};
+  alarms.forEach(function(a){ if (!eqSev[a.eq] || SEV_RANK[a.sev] < SEV_RANK[eqSev[a.eq]]) eqSev[a.eq] = a.sev; });
+  var d = {st:st, seg:seg, eq:eq, alarms:alarms, eqSev:eqSev};
+  cache[key] = d; return d;
+}
+function stationWorstAlarm(d, id){
+  var w = null;
+  d.alarms.forEach(function(a){ if (a.st === id && (!w || SEV_RANK[a.sev] < SEV_RANK[w])) w = a.sev; });
+  return w;
+}
+function series(id, peak, tech, period){
+  var r = rng(hashStr(id + tech + period + 'h'));
+  return PROFILE.map(function(p){ return clamp(Math.round(peak * p * (.93 + r() * .07)), 0, 100); });
+}
+function loadTok(v){ return v == null ? '--nodata' : v >= 85 ? '--crit' : v >= 70 ? '--warn' : '--ok'; }
+function loadWord(v){ return v == null ? '데이터 없음' : v >= 85 ? '위험' : v >= 70 ? '주의' : '정상'; }
+
+/* ---------- 상태 ---------- */
+var S = {tech:'5G', metric:'load', period:'24h', line:'all', sel:null, vb:{x:0, y:0, w:960, h:660}};
+var BASE = {x:0, y:0, w:960, h:660};
+
+function readHash(){
+  var h = (location.hash || '').replace('#', '').split('-');
+  if (h.length !== 3) return;
+  var t = {'5g':'5G', 'lte':'LTE'}[h[0]], m = h[1], p = h[2];
+  if (t) S.tech = t;
+  if (METRIC_LABEL[m]) S.metric = m;
+  if (PERIOD_LABEL[p]) S.period = p;
+}
+function writeHash(){
+  var h = '#' + S.tech.toLowerCase() + '-' + S.metric + '-' + S.period;
+  try { if (location.hash !== h) history.replaceState(null, '', h); } catch (e) {}
+}
+
+/* ---------- SVG 도우미 ---------- */
+var NS = 'http://www.w3.org/2000/svg';
+var svg = document.getElementById('map');
+function el(tag, attrs, parent, style){
+  var e = document.createElementNS(NS, tag);
+  for (var k in attrs) e.setAttribute(k, attrs[k]);
+  if (style) for (var s in style) e.style[s] = style[s];
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function setVB(){ var v = S.vb; svg.setAttribute('viewBox', v.x + ' ' + v.y + ' ' + v.w + ' ' + v.h); }
+
+/* ---------- 렌더 ---------- */
+function render(){
+  var d = getData(S.tech, S.period);
+  writeHash();
+  renderControls();
+  document.getElementById('headline').textContent = HEADLINE[S.metric];
+  document.getElementById('eyebrow-sel').textContent = S.tech + ' · ' + METRIC_LABEL[S.metric] + ' · ' + PERIOD_LABEL[S.period];
+  renderKpis(d);
+  renderChips();
+  renderMap(d);
+  renderLegend();
+  renderDetail(d);
+  renderPanels(d);
+}
+
+function renderControls(){
+  [['ctl-tech', S.tech], ['ctl-metric', S.metric], ['ctl-period', S.period]].forEach(function(p){
+    Array.prototype.forEach.call(document.getElementById(p[0]).children, function(b){ b.setAttribute('aria-pressed', String(b.dataset.v === p[1])); });
+  });
+}
+
+function renderKpis(d){
+  var ids = Object.keys(d.st);
+  var voc = ids.reduce(function(a, id){ return a + d.st[id].voc; }, 0);
+  var hot = ids.filter(function(id){ return d.st[id].load >= 85; }).length;
+  var crit = d.alarms.filter(function(a){ return a.sev === 'Critical'; }).length;
+  var ru = d.eq.filter(function(e){ return e.id.indexOf('RU') === 0; }).length;
+  var du = d.eq.filter(function(e){ return e.id.indexOf('DU') === 0; }).length;
+  var rep = d.eq.filter(function(e){ return e.id.indexOf('REP') === 0; }).length;
+  document.getElementById('kpis').innerHTML =
+    kpi('VOC 건수', voc.toLocaleString('ko-KR') + '건', PERIOD_LABEL[S.period]) +
+    kpi('부하율 85% 이상 역', hot + '개', '전체 ' + ids.length + '개 역 중') +
+    kpi('미해제 알람', d.alarms.length + '건', 'Critical ' + crit + '건', crit > 0) +
+    kpi('관리 장비', (ru + du + rep) + '대', 'RU ' + ru + ' · DU ' + du + ' · 중계기 ' + rep);
+}
+function kpi(k, v, s, crit){ return '<div class="kpi"><span class="k">' + k + '</span><span class="v num' + (crit ? ' crit' : '') + '">' + v + '</span><span class="s">' + s + '</span></div>'; }
+
+function renderChips(){
+  var box = document.getElementById('line-chips');
+  var items = [{id:'all', name:'전체'}].concat(LINES);
+  box.innerHTML = items.map(function(l){
+    return '<button type="button" class="chip" id="line-' + l.id + '" data-line="' + l.id + '" aria-pressed="' + (S.line === l.id) + '">' +
+      (l.c ? '<span class="dot" style="background:' + cssv(l.c) + '"></span>' : '') + l.name + '</button>';
+  }).join('');
+}
+
+function lineOn(lid){ return S.line === 'all' || S.line === lid; }
+function stationOn(id){ return S.line === 'all' || stationLines[id].indexOf(S.line) >= 0; }
+function segWidth(v){ return 3 + 15 * Math.sqrt(v / 100); }
+
+function renderMap(d){
+  while (svg.firstChild) svg.removeChild(svg.firstChild);
+  setVB();
+  var gSeg = el('g', {fill:'none', 'stroke-linecap':'round'}, svg);
+  var gHit = el('g', {}, svg);
+  var gMark = el('g', {}, svg);
+  var gSt = el('g', {}, svg);
+  var gLab = el('g', {'font-size':'11.5'}, svg);
+  var maxVoc = Math.max.apply(null, Object.keys(d.st).map(function(id){ return d.st[id].voc; })) || 1;
+
+  SEGS.forEach(function(s){
+    var a = px(s.a), b = px(s.b), on = lineOn(s.line), v = d.seg[s.id].load;
+    var selected = S.sel && S.sel.type === 'segment' && S.sel.id === s.id;
+    var style = {opacity: on ? '1' : '.12'};
+    var attrs = {x1:a[0], y1:a[1], x2:b[0], y2:b[1]};
+    if (S.metric === 'load'){
+      style.stroke = cssv(loadTok(v));
+      attrs['stroke-width'] = v == null ? 3 : segWidth(v).toFixed(1);
+      if (v == null) attrs['stroke-dasharray'] = '2 6';
+    } else {
+      style.stroke = cssv(LINE_BY_ID[s.line].c);
+      attrs['stroke-width'] = 4;
+      style.opacity = on ? (S.metric === 'alarm' ? '.35' : '.6') : '.08';
+    }
+    if (selected){ el('line', Object.assign({}, attrs, {'stroke-width': +attrs['stroke-width'] + 6}), gSeg, {stroke:cssv('--ink'), opacity:'1'}); }
+    el('line', attrs, gSeg, style);
+    if (on){
+      var hit = el('line', {x1:a[0], y1:a[1], x2:b[0], y2:b[1], 'stroke-width':22, class:'seg-hit', 'data-seg':s.id}, gHit, {stroke:'transparent'});
+      var t = el('title', {}, hit); t.textContent = LINE_BY_ID[s.line].name + ' ' + segName(s) + ' 터널 · 부하율 ' + (v == null ? '데이터 없음' : v + '%');
+    }
+    if (S.metric === 'alarm' && on){
+      var al = d.alarms.filter(function(x){ return x.seg === s.id; })[0];
+      if (al){
+        var mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+        if (al.sev === 'Critical') el('rect', {x:mx - 10, y:my - 10, width:20, height:20, rx:4, class:'pulse'}, gMark, {fill:cssv(SEV_TOK[al.sev])});
+        el('rect', {x:mx - 10, y:my - 10, width:20, height:20, rx:4}, gMark, {fill:cssv(SEV_TOK[al.sev]), stroke:cssv('--surface'), strokeWidth:'2'});
+        var tt = el('text', {x:mx, y:my + 4.5, 'text-anchor':'middle', 'font-size':'13', 'font-weight':'700'}, gMark, {fill:'#FFFFFF'}); tt.textContent = 'T';
+      }
+    }
+  });
+
+  Object.keys(ST).forEach(function(id){
+    var p = px(id), on = stationOn(id), sd = d.st[id], transfer = stationLines[id].length > 1;
+    var selected = S.sel && S.sel.type === 'station' && S.sel.id === id;
+    var g = el('g', {class:'st', 'data-st':id, tabindex: on ? '0' : '-1', role:'button'}, gSt, {opacity: on ? '1' : '.15'});
+    var label = nm(id) + ', ' + METRIC_LABEL[S.metric] + ' ';
+    if (S.metric === 'load'){
+      var r0 = transfer ? 8 : 6;
+      el('circle', {cx:p[0], cy:p[1], r:r0 + 2, class:'st-ring'}, g, {fill:cssv('--surface'), stroke:selected ? cssv('--ink') : cssv('--surface'), strokeWidth: selected ? '3' : '2'});
+      el('circle', {cx:p[0], cy:p[1], r:r0}, g, {fill:cssv(loadTok(sd.load))});
+      label += sd.load + '%';
+    } else if (S.metric === 'voc'){
+      var rv = 4 + 20 * Math.sqrt(sd.voc / maxVoc);
+      el('circle', {cx:p[0], cy:p[1], r:rv, class:'st-ring'}, g, {fill:cssv('--accent'), fillOpacity:'.22', stroke: selected ? cssv('--ink') : cssv('--accent'), strokeWidth: selected ? '3' : '1.8'});
+      if (rv >= 12){ var tv = el('text', {x:p[0], y:p[1] + 4, 'text-anchor':'middle', 'font-size':'11', 'font-weight':'700'}, g, {fill:cssv('--ink')}); tv.textContent = sd.voc; }
+      label += sd.voc + '건';
+    } else {
+      var w = stationWorstAlarm(d, id);
+      if (w === 'Critical') el('circle', {cx:p[0], cy:p[1], r:11, class:'pulse'}, g, {fill:cssv('--crit')});
+      el('circle', {cx:p[0], cy:p[1], r: w ? 9 : 5, class:'st-ring'}, g, {fill: w ? cssv(SEV_TOK[w]) : cssv('--surface'), stroke: selected ? cssv('--ink') : (w ? cssv('--surface') : cssv('--ink-2')), strokeWidth: selected ? '3' : '2'});
+      label += w ? w + ' 알람' : '알람 없음';
+    }
+    el('circle', {cx:p[0], cy:p[1], r:14}, g, {fill:'transparent'});
+    g.setAttribute('aria-label', label);
+
+    if (on){
+      var pos = ST[id][3], off = S.metric === 'voc' ? Math.max(10, 6 + 20 * Math.sqrt(sd.voc / maxVoc)) : 12;
+      var lx = p[0], ly = p[1], anchor = 'middle';
+      if (pos === 'r'){ lx += off; ly += 4; anchor = 'start'; }
+      else if (pos === 'l'){ lx -= off; ly += 4; anchor = 'end'; }
+      else if (pos === 't'){ ly -= off; }
+      else { ly += off + 9; }
+      var t = el('text', {x:lx, y:ly, 'text-anchor':anchor, 'font-weight': (transfer || selected) ? '700' : '400', 'paint-order':'stroke', 'stroke-width':'3.5', 'stroke-linejoin':'round'}, gLab, {fill: cssv(transfer || selected ? '--ink' : '--ink-2'), stroke:cssv('--surface')});
+      t.textContent = nm(id);
+    }
+  });
+}
+
+function renderLegend(){
+  var h = '';
+  if (S.metric === 'load'){
+    h = '<span class="it"><svg width="44" height="14" aria-hidden="true"><line x1="4" y1="7" x2="40" y2="7" stroke-width="4" stroke-linecap="round" style="stroke:var(--ink-2)"/></svg>굵기 = 터널 부하율</span>' +
+      leg('--ok', '70% 미만 정상') + leg('--warn', '70–85% 주의') + leg('--crit', '85% 이상 위험') +
+      '<span class="it"><svg width="44" height="14" aria-hidden="true"><line x1="4" y1="7" x2="40" y2="7" stroke-width="3" stroke-dasharray="2 6" stroke-linecap="round" style="stroke:var(--nodata)"/></svg>데이터 없음</span>';
+  } else if (S.metric === 'voc'){
+    h = '<span class="it"><svg width="40" height="24" aria-hidden="true"><circle cx="8" cy="14" r="4" style="fill:var(--accent);fill-opacity:.22;stroke:var(--accent)"/><circle cx="27" cy="12" r="10" style="fill:var(--accent);fill-opacity:.22;stroke:var(--accent)"/></svg>원 크기 = 역별 VOC 건수 (원 안 숫자 = 건수)</span>' +
+      LINES.map(function(l){ return leg(l.c, l.name); }).join('');
+  } else {
+    h = leg('--crit', 'Critical') + leg('--major', 'Major') + leg('--warn', 'Minor') +
+      '<span class="it"><svg width="18" height="18" aria-hidden="true"><rect x="1" y="1" width="16" height="16" rx="3" style="fill:var(--ink-2)"/><text x="9" y="13.5" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">T</text></svg>터널 장비(중계기) 알람</span>';
+  }
+  document.getElementById('legend').innerHTML = h;
+}
+function leg(tok, txt){ return '<span class="it"><span class="dot" style="background:' + cssv(tok) + '"></span>' + txt + '</span>'; }
+
+/* ---------- 오른쪽 패널 ---------- */
+function renderPanels(d){
+  var a = document.getElementById('panel-a'), b = document.getElementById('panel-b');
+  if (S.metric === 'load'){
+    var items = Object.keys(d.st).filter(stationOn).map(function(id){ return {type:'station', id:id, name:nm(id), kind:'역사', v:d.st[id].load, lines:stationLines[id]}; })
+      .concat(SEGS.filter(function(s){ return lineOn(s.line) && d.seg[s.id].load != null; }).map(function(s){ return {type:'segment', id:s.id, name:segName(s), kind:'터널', v:d.seg[s.id].load, lines:[s.line]}; }))
+      .sort(function(x, y){ return y.v - x.v; }).slice(0, 5);
+    a.innerHTML = '<h2>부하 높은 구간 TOP 5</h2><div class="rows">' + items.map(function(it, i){
+      var cur = S.sel && S.sel.type === it.type && S.sel.id === it.id;
+      return '<button type="button" class="row" data-pick="' + it.type + '|' + it.id + '" aria-current="' + cur + '">' +
+        '<span class="name"><span class="rank">' + (i + 1) + '</span>' + it.name + ' <span class="sub">' + it.kind + ' · ' + it.lines.map(function(l){ return LINE_BY_ID[l].name; }).join('·') + '</span></span>' +
+        '<span class="val num">' + it.v + '%</span>' +
+        '<span class="bar"><i style="width:' + it.v + '%;background:' + cssv(loadTok(it.v)) + '"></i><span class="tick" style="left:70%"></span><span class="tick" style="left:85%"></span></span></button>';
+    }).join('') + '</div>';
+    var target = S.sel || (items[0] ? {type:items[0].type, id:items[0].id} : null);
+    b.innerHTML = target ? loadChart(d, target) : '';
+  } else if (S.metric === 'voc'){
+    var top = Object.keys(d.st).filter(stationOn).map(function(id){ return d.st[id]; }).sort(function(x, y){ return y.voc - x.voc; }).slice(0, 5);
+    var maxV = top.length ? top[0].voc : 1;
+    a.innerHTML = '<h2>VOC 많은 역 TOP 5</h2><div class="rows">' + top.map(function(s, i){
+      var mi = s.types.indexOf(Math.max.apply(null, s.types));
+      var cur = S.sel && S.sel.type === 'station' && S.sel.id === s.id;
+      return '<button type="button" class="row" data-pick="station|' + s.id + '" aria-current="' + cur + '">' +
+        '<span class="name"><span class="rank">' + (i + 1) + '</span>' + nm(s.id) + ' <span class="sub">주요 유형 ' + VOC_TYPES[mi] + '</span></span>' +
+        '<span class="val num">' + s.voc.toLocaleString('ko-KR') + '건</span>' +
+        '<span class="bar"><i style="width:' + (s.voc / maxV * 100).toFixed(1) + '%;background:' + cssv('--accent') + '"></i></span></button>';
+    }).join('') + '</div>';
+    var sum = [0,0,0,0];
+    Object.keys(d.st).filter(stationOn).forEach(function(id){ d.st[id].types.forEach(function(v, k){ sum[k] += v; }); });
+    var tot = sum.reduce(function(x, y){ return x + y; }, 0) || 1;
+    b.innerHTML = '<h2>유형별 비율</h2><div class="stack" role="img" aria-label="VOC 유형별 비율: ' + VOC_TYPES.map(function(t, k){ return t + ' ' + Math.round(sum[k] / tot * 100) + '%'; }).join(', ') + '">' +
+      sum.map(function(v, k){ var p = v / tot * 100; return '<div style="width:' + p.toFixed(1) + '%;background:' + cssv(TYPE_TOK[k]) + '">' + (p >= 9 ? Math.round(p) + '%' : '') + '</div>'; }).join('') + '</div>' +
+      '<div class="legend" style="margin-top:10px">' + VOC_TYPES.map(function(t, k){ return '<span class="it"><span class="dot" style="background:' + cssv(TYPE_TOK[k]) + ';border-radius:2px"></span>' + t + ' <span class="num">' + sum[k].toLocaleString('ko-KR') + '</span></span>'; }).join('') + '</div>';
+  } else {
+    var list = d.alarms.filter(function(x){ return x.seg ? lineOn(SEG_BY_ID[x.seg].line) : stationOn(x.st); });
+    a.innerHTML = '<h2>미해제 알람 ' + list.length + '건</h2><div class="rows">' + (list.length ? list.map(function(x){
+      return '<button type="button" class="row" data-alarm="' + x.id + '" aria-current="' + (S.sel && S.sel.alarm === x.id) + '">' +
+        '<span class="name"><span class="sev ' + x.sev + '">' + x.sev + '</span>' + x.where + '</span>' +
+        '<span class="val num">11-10 ' + x.at + '</span>' +
+        '<span class="sub" style="grid-column:1 / -1">' + x.eq + (x.seg ? ' · 터널 중계기' : '') + ' · 발생 후 미해제</span></button>';
+    }).join('') : '<p class="note">선택한 호선에 미해제 알람이 없습니다.</p>') + '</div>';
+    b.innerHTML = '<p class="note">알람을 누르면 해당 역으로 지도가 이동하고, 같은 시간대의 VOC·부하율이 함께 표시됩니다.</p>';
+  }
+}
+
+function loadChart(d, t){
+  var name, peak, kind;
+  if (t.type === 'station'){ name = nm(t.id); peak = d.st[t.id].load; kind = '역사'; }
+  else { var s = SEG_BY_ID[t.id]; name = segName(s); peak = d.seg[t.id].load; kind = '터널'; }
+  if (peak == null) return '<h2>시간대별 부하율 · ' + name + '</h2><p class="note">이 구간은 측정값이 없습니다. 중계기 상태를 확인하세요.</p>';
+  var v = series(t.id, peak, S.tech, S.period);
+  var W = 380, H = 190, x0 = 34, y0 = 14, w = W - x0 - 10, h = H - y0 - 30;
+  var X = function(i){ return x0 + i * w / 23; }, Y = function(p){ return y0 + h - p / 100 * h; };
+  var pts = v.map(function(p, i){ return X(i).toFixed(1) + ',' + Y(p).toFixed(1); }).join(' ');
+  var area = 'M' + X(0) + ',' + Y(0) + ' L' + pts.split(' ').join(' L') + ' L' + X(23) + ',' + Y(0) + ' Z';
+  var pi = v.indexOf(Math.max.apply(null, v));
+  var g = '';
+  [0, 50, 100].forEach(function(p){ g += '<line x1="' + x0 + '" x2="' + (x0 + w) + '" y1="' + Y(p) + '" y2="' + Y(p) + '" style="stroke:var(--rule)"/><text x="' + (x0 - 6) + '" y="' + (Y(p) + 4) + '" text-anchor="end" font-size="10" style="fill:var(--ink-2)">' + p + '</text>'; });
+  g += '<line x1="' + x0 + '" x2="' + (x0 + w) + '" y1="' + Y(85) + '" y2="' + Y(85) + '" stroke-dasharray="4 4" stroke-width="1.5" style="stroke:var(--crit)"/><text x="' + (x0 + w) + '" y="' + (Y(85) - 5) + '" text-anchor="end" font-size="10" style="fill:var(--crit)">85% 위험</text>';
+  g += '<line x1="' + x0 + '" x2="' + (x0 + w) + '" y1="' + Y(70) + '" y2="' + Y(70) + '" stroke-dasharray="2 4" style="stroke:var(--warn)"/>';
+  g += '<path d="' + area + '" style="fill:var(--ink);fill-opacity:.07"/><polyline points="' + pts + '" fill="none" stroke-width="2.2" stroke-linejoin="round" style="stroke:var(--ink)"/>';
+  g += '<circle cx="' + X(pi) + '" cy="' + Y(v[pi]) + '" r="4" style="fill:' + cssv(loadTok(v[pi])) + ';stroke:var(--surface)" stroke-width="2"/><text x="' + Math.min(X(pi), x0 + w - 60) + '" y="' + (Y(v[pi]) - 9) + '" font-size="11" font-weight="700" style="fill:var(--ink)">' + pi + '시 ' + v[pi] + '%</text>';
+  [0, 6, 12, 18, 23].forEach(function(i){ g += '<text x="' + X(i) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10" style="fill:var(--ink-2)">' + String(i).padStart(2, '0') + '시</text>'; });
+  return '<h2>시간대별 부하율 · ' + name + ' <span style="font-weight:400;color:var(--ink-2);font-size:13px">' + kind + (S.period === '24h' ? '' : ' · ' + PERIOD_LABEL[S.period] + ' 시간대 평균') + '</span></h2>' +
+    '<div class="tbl"><svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block;min-width:300px" role="img" aria-label="' + name + ' 시간대별 부하율, 최고 ' + pi + '시 ' + v[pi] + '%">' + g + '</svg></div>';
+}
+
+/* ---------- 역·구간 상세 ---------- */
+function renderDetail(d){
+  var box = document.getElementById('detail');
+  if (!S.sel){ box.hidden = true; box.innerHTML = ''; return; }
+  box.hidden = false;
+  var h = '';
+  if (S.sel.type === 'station'){
+    var id = S.sel.id, sd = d.st[id];
+    var adj = SEGS.filter(function(s){ return s.a === id || s.b === id; });
+    var rows = sd.equip.map(function(e){ return eqRow(d, e.id, e.loc, e.load); })
+      .concat(adj.map(function(s){ var sg = d.seg[s.id]; return eqRow(d, sg.rep, '터널 ' + segName(s) + ' · ' + sg.dist + 'km', sg.load); }));
+    var al = d.alarms.filter(function(a){ return a.st === id || (a.seg && (SEG_BY_ID[a.seg].a === id || SEG_BY_ID[a.seg].b === id)); });
+    var insight = '';
+    if (al.length && sd.voc > 0){
+      var first = al.map(function(a){ return a.at; }).sort()[0];
+      var k = Math.max(1, Math.min(sd.voc, Math.round(sd.voc * .35)));
+      if (S.period !== '24h') k = Math.max(1, Math.round(k / 6));
+      insight = '<div class="insight"><b>' + first + ' 이후 VOC ' + k + '건 집중</b> → ' + al.map(function(a){ return a.eq; }).join(' · ') + ' 알람과 시간대 일치</div>';
+    }
+    h = '<div class="detail-head"><div><div class="eyebrow">' + stationLines[id].map(function(l){ return '<span style="display:inline-flex;align-items:center;gap:4px"><span class="dot" style="background:' + cssv(LINE_BY_ID[l].c) + '"></span>' + LINE_BY_ID[l].name + '</span>'; }).join('') + '</div><h2>' + nm(id) + '</h2></div>' +
+      '<button type="button" class="close" id="detail-close" aria-label="상세 닫기">×</button></div>' +
+      '<div class="facts"><div class="fact"><div class="k">부하율 (최대)</div><div class="v num" style="color:' + cssv(loadTok(sd.load)) + '">' + sd.load + '%</div></div>' +
+      '<div class="fact"><div class="k">VOC</div><div class="v num">' + sd.voc + '건</div></div>' +
+      '<div class="fact"><div class="k">미해제 알람</div><div class="v num"' + (al.length ? ' style="color:var(--crit)"' : '') + '>' + al.length + '건</div></div></div>' +
+      insight +
+      '<div class="tbl"><table><thead><tr><th>장비ID</th><th>위치</th><th class="r">부하율</th><th>상태</th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>' +
+      '<button type="button" class="linkbtn" id="to-station">역 상세 화면으로 (역사 구조도)</button>';
+  } else {
+    var s = SEG_BY_ID[S.sel.id], sg = d.seg[s.id];
+    var sal = d.alarms.filter(function(a){ return a.seg === s.id; });
+    h = '<div class="detail-head"><div><div class="eyebrow"><span style="display:inline-flex;align-items:center;gap:4px"><span class="dot" style="background:' + cssv(LINE_BY_ID[s.line].c) + '"></span>' + LINE_BY_ID[s.line].name + ' · 터널 구간</span></div><h2>' + segName(s) + '</h2></div>' +
+      '<button type="button" class="close" id="detail-close" aria-label="상세 닫기">×</button></div>' +
+      '<div class="facts"><div class="fact"><div class="k">부하율</div><div class="v num" style="color:' + cssv(loadTok(sg.load)) + '">' + (sg.load == null ? '—' : sg.load + '%') + '</div></div>' +
+      '<div class="fact"><div class="k">중계기</div><div class="v num" style="font-size:15px">' + sg.rep + '</div></div>' +
+      '<div class="fact"><div class="k">미해제 알람</div><div class="v num"' + (sal.length ? ' style="color:var(--crit)"' : '') + '>' + sal.length + '건</div></div></div>' +
+      (sg.load == null ? '<div class="insight"><b>측정값 없음</b> — 집계에서 제외됨. 중계기 ' + sg.rep + ' 상태를 확인하세요.</div>' : '') +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="chip" data-pick="station|' + s.a + '">' + nm(s.a) + ' 보기</button><button type="button" class="chip" data-pick="station|' + s.b + '">' + nm(s.b) + ' 보기</button></div>';
+  }
+  box.innerHTML = h;
+}
+function eqRow(d, id, loc, load){
+  var sev = d.eqSev[id];
+  var stat = sev ? '<span class="st-badge" style="color:' + cssv(SEV_TOK[sev]) + '"><span class="dot" style="background:' + cssv(SEV_TOK[sev]) + '"></span>' + sev + '</span>'
+    : '<span class="st-badge" style="color:var(--ok)"><span class="dot" style="background:var(--ok)"></span>정상</span>';
+  return '<tr><td class="num">' + id + '</td><td>' + loc + '</td><td class="r num" style="color:' + cssv(loadTok(load)) + '">' + (load == null ? '—' : load + '%') + '</td><td>' + stat + '</td></tr>';
+}
+
+/* ---------- 지도 이동 ---------- */
+function focusOn(id){
+  var p = px(id), w = 480, h = 330;
+  S.vb = {x:clamp(p[0] - w / 2, -100, 960 - w + 100), y:clamp(p[1] - h / 2, -100, 660 - h + 100), w:w, h:h};
+}
+function zoom(f, cx, cy){
+  var v = S.vb, nw = clamp(v.w * f, 240, 1200), nh = nw * 660 / 960;
+  if (cx == null){ cx = v.x + v.w / 2; cy = v.y + v.h / 2; }
+  var rx = (cx - v.x) / v.w, ry = (cy - v.y) / v.h;
+  S.vb = {x:cx - rx * nw, y:cy - ry * nh, w:nw, h:nh}; setVB();
+}
+
+/* ---------- 이벤트 ---------- */
+function bindSeg(id, key){
+  document.getElementById(id).addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b) return;
+    S[key] = b.dataset.v; if (key === 'metric' && S.sel && S.sel.alarm) S.sel = null; render();
+  });
+}
+bindSeg('ctl-tech', 'tech'); bindSeg('ctl-metric', 'metric'); bindSeg('ctl-period', 'period');
+
+document.getElementById('line-chips').addEventListener('click', function(e){
+  var b = e.target.closest('button'); if (!b) return; S.line = b.dataset.line; render();
+});
+document.getElementById('zoom-in').addEventListener('click', function(){ zoom(.75); });
+document.getElementById('zoom-out').addEventListener('click', function(){ zoom(1 / .75); });
+document.getElementById('zoom-reset').addEventListener('click', function(){ S.vb = Object.assign({}, BASE); setVB(); });
+
+function pick(type, id, opts){
+  S.sel = {type:type, id:id};
+  if (opts && opts.alarm) S.sel.alarm = opts.alarm;
+  if (opts && opts.focus) focusOn(opts.focus);
+  render();
+}
+document.getElementById('aside').addEventListener('click', function(e){
+  var b = e.target.closest('button'); if (!b) return;
+  if (b.id === 'detail-close'){ S.sel = null; render(); return; }
+  if (b.id === 'to-station'){ b.textContent = '역 상세 화면(⑤)은 다음 단계에서 연결됩니다'; return; }
+  if (b.dataset.pick){ var p = b.dataset.pick.split('|'); pick(p[0], p[1], {focus: p[0] === 'station' ? p[1] : SEG_BY_ID[p[1]].a}); return; }
+  if (b.dataset.alarm){
+    var a = getData(S.tech, S.period).alarms.filter(function(x){ return x.id === b.dataset.alarm; })[0];
+    if (a.seg) pick('segment', a.seg, {alarm:a.id, focus:a.focus}); else pick('station', a.st, {alarm:a.id, focus:a.focus});
+  }
+});
+
+var drag = null;
+function svgPt(e){ var r = svg.getBoundingClientRect(); return [S.vb.x + (e.clientX - r.left) / r.width * S.vb.w, S.vb.y + (e.clientY - r.top) / r.height * S.vb.h]; }
+svg.addEventListener('pointerdown', function(e){ drag = {sx:e.clientX, sy:e.clientY, vb:Object.assign({}, S.vb), moved:false, id:e.pointerId}; });
+svg.addEventListener('pointermove', function(e){
+  if (!drag) return;
+  var dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+  if (!drag.moved && Math.abs(dx) + Math.abs(dy) > 5){ drag.moved = true; svg.classList.add('dragging'); try { svg.setPointerCapture(drag.id); } catch (er) {} }
+  if (drag.moved){ var r = svg.getBoundingClientRect(); S.vb.x = drag.vb.x - dx / r.width * drag.vb.w; S.vb.y = drag.vb.y - dy / r.height * drag.vb.h; setVB(); }
+});
+function endDrag(e){
+  if (!drag) return;
+  var moved = drag.moved; drag = null; svg.classList.remove('dragging');
+  if (moved || e.type !== 'pointerup') return;
+  var t = document.elementFromPoint(e.clientX, e.clientY);
+  var st = t && t.closest && t.closest('[data-st]'), sg = t && t.closest && t.closest('[data-seg]');
+  if (st) pick('station', st.getAttribute('data-st'));
+  else if (sg) pick('segment', sg.getAttribute('data-seg'));
+}
+svg.addEventListener('pointerup', endDrag);
+svg.addEventListener('pointercancel', endDrag);
+svg.addEventListener('wheel', function(e){
+  if (!e.ctrlKey && !e.metaKey) return;
+  e.preventDefault(); var p = svgPt(e); zoom(e.deltaY > 0 ? 1.12 : 1 / 1.12, p[0], p[1]);
+}, {passive:false});
+svg.addEventListener('keydown', function(e){
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  var st = e.target.closest && e.target.closest('[data-st]');
+  if (st){ e.preventDefault(); pick('station', st.getAttribute('data-st')); var n = svg.querySelector('[data-st="' + st.getAttribute('data-st') + '"]'); if (n) n.focus(); }
+});
+window.addEventListener('hashchange', function(){ readHash(); render(); });
+
+readHash();
+render();
+})();
+</script>
