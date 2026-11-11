@@ -1,31 +1,36 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>무선망 노선도</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&family=Space+Grotesk:wght@500;700&display=swap">
 <style>
-/* Layout: 시안 C — 헤드라인 + 컨트롤 바, 좌측 흐름 지도(굵기·크기=지표), 우측 지표별 패널 */
+/* Layout: 시안 C — 헤드라인 + 컨트롤 바, 좌측 노선도(실제 노선·공식 색, 굵기·크기=지표), 우측 지표별 패널 */
 :root{
   --bg:#FAF9F6; --surface:#FFFFFF; --ink:#18181B; --ink-2:#5B5B63; --rule:#E4E1DA; --rule-strong:#18181B; --chip:#F1EFEA;
-  --ok:#2F8F5B; --warn:#B8860B; --crit:#D2453B; --major:#DD7426; --nodata:#B3B0A8; --accent:#2F6FDB;
-  --l1:#0052A4; --l2:#00A84D; --l3:#EF7C1C; --l4:#00A5DE;
+  --ok:#2F8F5B; --warn:#C28A00; --crit:#D2453B; --major:#DD7426; --nodata:#9C998F; --accent:#2F6FDB;
   --t1:#2F6FDB; --t2:#D2453B; --t3:#C9971C; --t4:#8F8C85;
   --font-body:'Noto Sans KR', system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
   --font-num:'Space Grotesk', 'Noto Sans KR', system-ui, sans-serif;
+  color-scheme:light;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --bg:#141416; --surface:#1D1D21; --ink:#EDEDEF; --ink-2:#A3A3AD; --rule:#34343A; --rule-strong:#EDEDEF; --chip:#26262B;
-  --ok:#4CBB7F; --warn:#E2B53B; --crit:#F0675D; --major:#F0954A; --nodata:#5D5D66; --accent:#76A5F2;
-  --l1:#4F86E0; --l2:#2FC46F; --l3:#F5964A; --l4:#38BDEB;
+  --ok:#4CBB7F; --warn:#E2B53B; --crit:#F0675D; --major:#F0954A; --nodata:#6E6E78; --accent:#76A5F2;
   --t1:#76A5F2; --t2:#F0675D; --t3:#E2B53B; --t4:#8E8E98; color-scheme:dark; } }
 :root[data-theme="dark"]{
   --bg:#141416; --surface:#1D1D21; --ink:#EDEDEF; --ink-2:#A3A3AD; --rule:#34343A; --rule-strong:#EDEDEF; --chip:#26262B;
-  --ok:#4CBB7F; --warn:#E2B53B; --crit:#F0675D; --major:#F0954A; --nodata:#5D5D66; --accent:#76A5F2;
-  --l1:#4F86E0; --l2:#2FC46F; --l3:#F5964A; --l4:#38BDEB;
+  --ok:#4CBB7F; --warn:#E2B53B; --crit:#F0675D; --major:#F0954A; --nodata:#6E6E78; --accent:#76A5F2;
   --t1:#76A5F2; --t2:#F0675D; --t3:#E2B53B; --t4:#8E8E98; color-scheme:dark; }
 
 *{box-sizing:border-box}
+html,body{margin:0}
 body{background:var(--bg); color:var(--ink); font-family:var(--font-body); font-size:14px; line-height:1.5}
+[hidden]{display:none !important}
 .wrap{max-width:1440px; margin:0 auto; padding-block:28px 40px; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); display:flex; flex-direction:column; gap:20px}
 .num{font-family:var(--font-num); font-variant-numeric:tabular-nums}
 button{font:inherit; color:inherit; cursor:pointer}
@@ -53,28 +58,44 @@ h1{margin:6px 0 0; font-size:clamp(24px, 3.2vw, 36px); font-weight:900; letter-s
 @media (max-width:720px){ .kpis{grid-template-columns:repeat(2, minmax(0,1fr))} .kpi:nth-child(3){padding-left:0; border-left:0} }
 
 .main{display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start}
-.mapcol{flex:999 1 600px; min-width:0; display:flex; flex-direction:column; gap:10px}
+.mapcol{flex:999 1 620px; min-width:0; display:flex; flex-direction:column; gap:10px}
 aside{flex:1 1 360px; min-width:0; display:flex; flex-direction:column; gap:28px}
 
-.mapbar{display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; align-items:center}
-.chips{display:flex; flex-wrap:wrap; gap:6px}
-.chip{min-height:36px; padding:0 12px; border-radius:18px; border:1.5px solid var(--rule); background:var(--surface); font-size:13px; font-weight:500; display:inline-flex; align-items:center; gap:6px}
-.chip[aria-pressed="true"]{border-color:var(--ink); font-weight:700}
+.mapbar{display:flex; flex-wrap:wrap; justify-content:space-between; gap:8px; align-items:flex-start}
+.chips{display:flex; flex-wrap:wrap; gap:6px; flex:1 1 400px; min-width:0}
+.chip{min-height:34px; padding:0 11px; border-radius:17px; border:1.5px solid var(--rule); background:var(--surface); font-size:13px; font-weight:500; display:inline-flex; align-items:center; gap:6px}
+.chip[aria-pressed="true"]{border-color:var(--ink); font-weight:700; background:var(--chip)}
 .dot{width:10px; height:10px; border-radius:50%; display:inline-block; flex:0 0 auto}
 .zoom{display:flex; gap:4px}
 .zoom button{width:36px; height:36px; border-radius:8px; border:1.5px solid var(--rule); background:var(--surface); font-size:16px; font-weight:700; display:flex; align-items:center; justify-content:center}
 
 .mapbox{position:relative; background:var(--surface); border-radius:16px; overflow:hidden; touch-action:none; border:1px solid var(--rule)}
-#map{display:block; width:100%; height:auto; aspect-ratio:960/660; max-width:100%; cursor:grab; user-select:none}
+#map{display:block; width:100%; height:auto; max-width:100%; cursor:grab; user-select:none; -webkit-user-select:none}
 #map.dragging{cursor:grabbing}
 #map text{font-family:var(--font-body); pointer-events:none}
 .st{cursor:pointer}
 .st:focus{outline:none}
-.st:focus-visible .st-ring{stroke:var(--accent); stroke-width:3}
+.st .st-core{transform-box:fill-box; transform-origin:center; transition:transform .12s ease}
+.st:hover .st-core, .st:focus-visible .st-core{transform:scale(1.6)}
+.st:focus-visible .st-core{stroke:var(--accent) !important}
 .seg-hit{cursor:pointer}
 .pulse{transform-box:fill-box; transform-origin:center; animation:pulse 1.6s ease-out infinite}
-@keyframes pulse{0%{transform:scale(1); opacity:.7} 100%{transform:scale(2.4); opacity:0}}
-@media (prefers-reduced-motion: reduce){ .pulse{animation:none; opacity:.35} }
+@keyframes pulse{0%{transform:scale(1); opacity:.7} 100%{transform:scale(2.6); opacity:0}}
+@media (prefers-reduced-motion: reduce){ .pulse{animation:none; opacity:.35} .st .st-core{transition:none} }
+
+.pop{position:absolute; z-index:5; width:260px; max-width:calc(100% - 16px); background:var(--surface); color:var(--ink); border:2px solid var(--ink); border-radius:12px; padding:12px 14px; box-shadow:0 8px 24px rgba(0,0,0,.18); display:flex; flex-direction:column; gap:8px; pointer-events:auto}
+.pop-head{display:flex; justify-content:space-between; align-items:flex-start; gap:8px}
+.pop-head strong{font-size:17px; font-weight:900; line-height:1.25}
+.pop .lines{display:flex; flex-wrap:wrap; gap:4px; margin-top:4px}
+.lb{display:inline-flex; align-items:center; height:20px; padding:0 7px; border-radius:10px; color:#FFFFFF; font-size:11px; font-weight:700}
+.pop-facts{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:6px}
+.pop-facts div{background:var(--chip); border-radius:6px; padding:5px 7px}
+.pop-facts .k{font-size:10.5px; color:var(--ink-2)} .pop-facts .v{font-size:15px; font-weight:700}
+.pop .al{font-size:12px; display:flex; flex-direction:column; gap:4px}
+.pop-actions{display:flex; gap:6px}
+.pop-actions button{flex:1; min-height:36px; border-radius:8px; border:1.5px solid var(--ink); background:var(--ink); color:var(--bg); font-size:13px; font-weight:700}
+.pop-actions button.ghost{background:transparent; color:var(--ink); border-color:var(--rule)}
+.x{width:30px; height:30px; flex:0 0 auto; border-radius:8px; border:1.5px solid var(--rule); background:transparent; font-size:16px; line-height:1}
 
 .legend{display:flex; flex-wrap:wrap; gap:8px 18px; font-size:12px; color:var(--ink-2); align-items:center}
 .legend .it{display:inline-flex; align-items:center; gap:6px}
@@ -97,10 +118,9 @@ aside h2{margin:0 0 12px; font-size:16px; font-weight:900}
 .stack{display:flex; height:30px; border-radius:6px; overflow:hidden; gap:2px}
 .stack > div{display:flex; align-items:center; padding-left:8px; color:#FFFFFF; font-size:12px; font-weight:700; min-width:0; overflow:hidden}
 
-.detail{border:2px solid var(--rule-strong); border-radius:12px; padding:16px; background:var(--surface); display:flex; flex-direction:column; gap:12px}
+.detail{border:2px solid var(--rule-strong); border-radius:12px; padding:16px; background:var(--surface); display:flex; flex-direction:column; gap:12px; scroll-margin-top:16px}
 .detail-head{display:flex; justify-content:space-between; align-items:flex-start; gap:8px}
-.detail-head h2{margin:0; font-size:20px}
-.close{width:36px; height:36px; border-radius:8px; border:1.5px solid var(--rule); background:transparent; font-size:18px; line-height:1}
+.detail-head h2{margin:4px 0 0; font-size:20px}
 .facts{display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:8px}
 .fact{background:var(--chip); border-radius:8px; padding:8px 10px}
 .fact .k{font-size:11px; color:var(--ink-2)} .fact .v{font-size:18px; font-weight:700}
@@ -115,11 +135,12 @@ td.r, th.r{text-align:right}
 .linkbtn{min-height:44px; border-radius:8px; border:2px solid var(--ink); background:var(--ink); color:var(--bg); font-weight:700}
 .chart text{font-family:var(--font-num)}
 </style>
-
+</head>
+<body>
 <div class="wrap">
   <header class="top">
     <div>
-      <div class="eyebrow"><span>[서비스명] 무선망 노선도</span><span id="eyebrow-sel"></span><span id="eyebrow-asof">2026-11-10 22:00 기준</span></div>
+      <div class="eyebrow"><span>[서비스명] 무선망 노선도</span><span id="eyebrow-sel"></span><span>2026-11-10 22:00 기준</span></div>
       <h1 id="headline">선이 굵고 붉을수록 부하가 높습니다</h1>
     </div>
     <div class="controls">
@@ -152,11 +173,12 @@ td.r, th.r{text-align:right}
           </button>
         </div>
       </div>
-      <div class="mapbox">
-        <svg id="map" viewBox="0 0 960 660" role="group" aria-label="수도권 지하철 무선망 노선도"></svg>
+      <div class="mapbox" id="mapbox">
+        <svg id="map" role="group" aria-label="서울 지하철 무선망 노선도"></svg>
+        <div class="pop" id="pop" hidden role="dialog" aria-label="역 정보"></div>
       </div>
       <div class="legend" id="legend"></div>
-      <p class="note">가상 데이터 · 1–4호선 도심 구간만 표시 · 역 좌표는 근사값. 역이나 구간을 누르면 상세가 열립니다. 드래그로 이동, Ctrl+휠 또는 버튼으로 확대.</p>
+      <p class="note">가상 데이터 · 서울 시내 구간 1–9호선과 주요 광역 노선 · 노선 순서와 색은 실제 기준, 역 좌표는 근사값(공공데이터 적재 시 교체). 역을 누르면 정보 카드가 열립니다. 드래그로 이동, Ctrl+휠 또는 버튼으로 확대하면 모든 역 이름이 보입니다.</p>
     </section>
 
     <aside id="aside">
@@ -171,23 +193,65 @@ td.r, th.r{text-align:right}
 (function(){
 'use strict';
 
-/* ---------- 마스터 데이터 (근사 좌표) ---------- */
-var ST = {
-  SEO:['서울역',37.5547,126.9707,'l'], CHG:['시청',37.5657,126.9769,'l'], JGK:['종각',37.5702,126.9831,'b'], JR3:['종로3가',37.5715,126.9916,'t'],
-  JR5:['종로5가',37.5709,127.0019,'b'], DDM:['동대문',37.5714,127.0099,'r'], DMA:['동묘앞',37.5733,127.0166,'t'], SSD:['신설동',37.5760,127.0243,'r'],
-  AHN:['아현',37.5573,126.9560,'b'], CJR:['충정로',37.5600,126.9636,'t'], EJ1:['을지로입구',37.5660,126.9826,'b'], EJ3:['을지로3가',37.5663,126.9910,'b'],
-  EJ4:['을지로4가',37.5667,126.9981,'t'], DDP:['동대문역사문화공원',37.5653,127.0078,'b'], SDG:['신당',37.5657,127.0176,'b'], SWS:['상왕십리',37.5644,127.0293,'t'],
-  WSR:['왕십리',37.5612,127.0371,'r'], GBG:['경복궁',37.5758,126.9735,'t'], AGK:['안국',37.5765,126.9854,'t'], CMR:['충무로',37.5612,126.9942,'b'],
-  DDE:['동대입구',37.5590,127.0057,'r'], YKS:['약수',37.5543,127.0107,'r'], HSD:['한성대입구',37.5884,127.0062,'r'], HH:['혜화',37.5822,127.0019,'r'],
-  MD:['명동',37.5609,126.9863,'b'], HHY:['회현',37.5585,126.9782,'l'], SDE:['숙대입구',37.5448,126.9725,'l']
+/* ---------- 역 좌표 (근사값: 위도, 경도) ---------- */
+var C = {
+'도봉산':[37.6896,127.0461],'도봉':[37.6795,127.0455],'방학':[37.6676,127.0441],'창동':[37.6532,127.0477],'녹천':[37.6446,127.0513],'월계':[37.6332,127.0587],'광운대':[37.6236,127.0617],'석계':[37.6150,127.0659],'신이문':[37.6017,127.0672],'외대앞':[37.5960,127.0635],'회기':[37.5894,127.0579],'청량리':[37.5801,127.0470],'제기동':[37.5782,127.0349],'신설동':[37.5760,127.0243],'동묘앞':[37.5733,127.0166],'동대문':[37.5714,127.0099],'종로5가':[37.5709,127.0019],'종로3가':[37.5715,126.9916],'종각':[37.5702,126.9831],'시청':[37.5657,126.9769],'서울역':[37.5547,126.9707],'남영':[37.5410,126.9713],'용산':[37.5298,126.9648],'노량진':[37.5141,126.9425],'대방':[37.5133,126.9264],'신길':[37.5170,126.9177],'영등포':[37.5157,126.9075],'신도림':[37.5088,126.8913],'구로':[37.5030,126.8819],'구일':[37.4963,126.8705],'개봉':[37.4946,126.8582],'오류동':[37.4943,126.8450],'온수':[37.4922,126.8233],'가산디지털단지':[37.4813,126.8828],'독산':[37.4661,126.8894],'금천구청':[37.4557,126.8946],
+'을지로입구':[37.5660,126.9826],'을지로3가':[37.5663,126.9910],'을지로4가':[37.5667,126.9981],'동대문역사문화공원':[37.5653,127.0078],'신당':[37.5657,127.0176],'상왕십리':[37.5644,127.0293],'왕십리':[37.5612,127.0371],'한양대':[37.5555,127.0436],'뚝섬':[37.5472,127.0474],'성수':[37.5446,127.0559],'건대입구':[37.5404,127.0692],'구의':[37.5370,127.0857],'강변':[37.5352,127.0947],'잠실나루':[37.5207,127.1038],'잠실':[37.5133,127.1001],'잠실새내':[37.5116,127.0863],'종합운동장':[37.5109,127.0736],'삼성':[37.5088,127.0631],'선릉':[37.5045,127.0490],'역삼':[37.5006,127.0364],'강남':[37.4979,127.0276],'교대':[37.4934,127.0140],'서초':[37.4918,127.0076],'방배':[37.4815,126.9976],'사당':[37.4766,126.9816],'낙성대':[37.4769,126.9636],'서울대입구':[37.4812,126.9527],'봉천':[37.4824,126.9418],'신림':[37.4842,126.9297],'신대방':[37.4875,126.9131],'구로디지털단지':[37.4852,126.9015],'대림':[37.4930,126.8957],'문래':[37.5180,126.8950],'영등포구청':[37.5248,126.8960],'당산':[37.5343,126.9025],'합정':[37.5495,126.9139],'홍대입구':[37.5571,126.9245],'신촌':[37.5552,126.9369],'이대':[37.5567,126.9460],'아현':[37.5573,126.9560],'충정로':[37.5600,126.9636],'용답':[37.5619,127.0508],'신답':[37.5700,127.0465],'용두':[37.5741,127.0383],'도림천':[37.5145,126.8826],'양천구청':[37.5124,126.8655],'신정네거리':[37.5200,126.8530],'까치산':[37.5316,126.8466],
+'구파발':[37.6366,126.9188],'연신내':[37.6191,126.9210],'불광':[37.6104,126.9299],'녹번':[37.6007,126.9356],'홍제':[37.5889,126.9440],'무악재':[37.5822,126.9502],'독립문':[37.5745,126.9579],'경복궁':[37.5758,126.9735],'안국':[37.5765,126.9854],'충무로':[37.5612,126.9942],'동대입구':[37.5590,127.0057],'약수':[37.5543,127.0107],'금호':[37.5480,127.0154],'옥수':[37.5406,127.0185],'압구정':[37.5270,127.0284],'신사':[37.5164,127.0203],'잠원':[37.5129,127.0112],'고속터미널':[37.5048,127.0049],'남부터미널':[37.4850,127.0163],'양재':[37.4842,127.0346],'매봉':[37.4870,127.0468],'도곡':[37.4910,127.0556],'대치':[37.4946,127.0634],'학여울':[37.4966,127.0707],'대청':[37.4936,127.0795],'일원':[37.4836,127.0846],'수서':[37.4873,127.1018],'가락시장':[37.4925,127.1182],'경찰병원':[37.4959,127.1243],'오금':[37.5022,127.1281],
+'불암산':[37.6702,127.0791],'상계':[37.6608,127.0735],'노원':[37.6559,127.0619],'쌍문':[37.6486,127.0347],'수유':[37.6380,127.0257],'미아':[37.6267,127.0260],'미아사거리':[37.6133,127.0300],'길음':[37.6034,127.0250],'성신여대입구':[37.5927,127.0164],'한성대입구':[37.5884,127.0062],'혜화':[37.5822,127.0019],'명동':[37.5609,126.9863],'회현':[37.5585,126.9782],'숙대입구':[37.5448,126.9725],'삼각지':[37.5348,126.9730],'신용산':[37.5291,126.9679],'이촌':[37.5222,126.9743],'동작':[37.5028,126.9798],'이수':[37.4867,126.9820],'남태령':[37.4639,126.9893],
+'방화':[37.5775,126.8127],'개화산':[37.5726,126.8065],'김포공항':[37.5622,126.8013],'송정':[37.5612,126.8114],'마곡':[37.5602,126.8254],'발산':[37.5585,126.8376],'우장산':[37.5484,126.8364],'화곡':[37.5416,126.8404],'신정':[37.5249,126.8561],'목동':[37.5262,126.8649],'오목교':[37.5245,126.8751],'양평':[37.5254,126.8857],'영등포시장':[37.5226,126.9052],'여의도':[37.5217,126.9243],'여의나루':[37.5271,126.9329],'마포':[37.5395,126.9459],'공덕':[37.5443,126.9516],'애오개':[37.5535,126.9566],'서대문':[37.5658,126.9666],'광화문':[37.5710,126.9768],'청구':[37.5602,127.0138],'신금호':[37.5545,127.0206],'행당':[37.5574,127.0295],'마장':[37.5661,127.0429],'답십리':[37.5668,127.0526],'장한평':[37.5614,127.0645],'군자':[37.5571,127.0795],'아차산':[37.5516,127.0896],'광나루':[37.5453,127.1035],'천호':[37.5386,127.1236],'강동':[37.5358,127.1323],'길동':[37.5379,127.1400],'굽은다리':[37.5456,127.1428],'명일':[37.5514,127.1440],'고덕':[37.5550,127.1543],'상일동':[37.5567,127.1660],'둔촌동':[37.5279,127.1363],'올림픽공원':[37.5162,127.1307],'방이':[37.5087,127.1262],'개롱':[37.4980,127.1348],'거여':[37.4932,127.1440],'마천':[37.4949,127.1527],
+'응암':[37.5986,126.9155],'역촌':[37.6060,126.9227],'독바위':[37.6187,126.9330],'구산':[37.6113,126.9172],'새절':[37.5910,126.9135],'증산':[37.5838,126.9097],'디지털미디어시티':[37.5770,126.8995],'월드컵경기장':[37.5696,126.8992],'마포구청':[37.5634,126.9035],'망원':[37.5560,126.9100],'상수':[37.5477,126.9229],'광흥창':[37.5474,126.9319],'대흥':[37.5476,126.9425],'효창공원앞':[37.5392,126.9612],'녹사평':[37.5345,126.9866],'이태원':[37.5345,126.9943],'한강진':[37.5396,127.0017],'버티고개':[37.5480,127.0071],'창신':[37.5797,127.0151],'보문':[37.5853,127.0193],'안암':[37.5862,127.0291],'고려대':[37.5904,127.0362],'월곡':[37.6019,127.0414],'상월곡':[37.6067,127.0482],'돌곶이':[37.6105,127.0566],'태릉입구':[37.6178,127.0750],'화랑대':[37.6200,127.0841],'봉화산':[37.6173,127.0914],'신내':[37.6128,127.1034],
+'수락산':[37.6774,127.0554],'마들':[37.6649,127.0577],'중계':[37.6449,127.0645],'하계':[37.6365,127.0679],'공릉':[37.6253,127.0730],'먹골':[37.6107,127.0778],'중화':[37.6022,127.0792],'상봉':[37.5965,127.0855],'면목':[37.5886,127.0875],'사가정':[37.5809,127.0884],'용마산':[37.5737,127.0866],'중곡':[37.5655,127.0843],'어린이대공원':[37.5480,127.0746],'뚝섬유원지':[37.5315,127.0667],'청담':[37.5191,127.0519],'강남구청':[37.5172,127.0412],'학동':[37.5142,127.0317],'논현':[37.5109,127.0215],'반포':[37.5082,127.0115],'내방':[37.4876,126.9935],'남성':[37.4846,126.9711],'숭실대입구':[37.4964,126.9536],'상도':[37.5027,126.9480],'장승배기':[37.5049,126.9391],'신대방삼거리':[37.4997,126.9283],'보라매':[37.4999,126.9203],'신풍':[37.5000,126.9089],'남구로':[37.4859,126.8873],'철산':[37.4762,126.8679],'광명사거리':[37.4793,126.8549],'천왕':[37.4866,126.8386],
+'암사':[37.5502,127.1276],'강동구청':[37.5306,127.1206],'몽촌토성':[37.5174,127.1123],'석촌':[37.5055,127.1069],'송파':[37.4998,127.1121],'문정':[37.4858,127.1225],'장지':[37.4787,127.1262],'복정':[37.4707,127.1268],
+'개화':[37.5786,126.7977],'공항시장':[37.5636,126.8105],'신방화':[37.5672,126.8166],'마곡나루':[37.5668,126.8272],'양천향교':[37.5684,126.8417],'가양':[37.5614,126.8544],'증미':[37.5579,126.8613],'등촌':[37.5509,126.8655],'염창':[37.5469,126.8748],'신목동':[37.5442,126.8830],'선유도':[37.5378,126.8937],'국회의사당':[37.5281,126.9178],'샛강':[37.5170,126.9289],'노들':[37.5129,126.9532],'흑석':[37.5088,126.9636],'구반포':[37.5014,126.9874],'신반포':[37.5034,126.9958],'사평':[37.5044,127.0153],'신논현':[37.5046,127.0253],'언주':[37.5073,127.0339],'선정릉':[37.5104,127.0436],'삼성중앙':[37.5130,127.0531],'봉은사':[37.5142,127.0602],'삼전':[37.5047,127.0880],'석촌고분':[37.5025,127.0970],'송파나루':[37.5103,127.1122],'한성백제':[37.5163,127.1163],'둔촌오륜':[37.5194,127.1384],'중앙보훈병원':[37.5291,127.1484],
+'서울숲':[37.5436,127.0446],'압구정로데오':[37.5274,127.0405],'한티':[37.4962,127.0528],'구룡':[37.4870,127.0590],'개포동':[37.4893,127.0662],'대모산입구':[37.4912,127.0729],
+'양재시민의숲':[37.4707,127.0386],'청계산입구':[37.4479,127.0549],
+'수색':[37.5807,126.8957],'가좌':[37.5684,126.9147],'서강대':[37.5519,126.9354],'서빙고':[37.5196,126.9884],'한남':[37.5296,127.0088],'응봉':[37.5500,127.0344],'중랑':[37.5946,127.0759],'망우':[37.5994,127.0920],
+'북한산우이':[37.6631,127.0128],'솔밭공원':[37.6560,127.0133],'4.19민주묘지':[37.6495,127.0137],'가오리':[37.6416,127.0167],'화계':[37.6343,127.0172],'삼양':[37.6271,127.0181],'삼양사거리':[37.6213,127.0204],'솔샘':[37.6201,127.0136],'북한산보국문':[37.6122,127.0081],'정릉':[37.6029,127.0137],
+'서울지방병무청':[37.5054,126.9268],'보라매공원':[37.4955,126.9180],'보라매병원':[37.4935,126.9244],'당곡':[37.4904,126.9270],'서원':[37.4787,126.9327],'서울대벤처타운':[37.4722,126.9338],'관악산':[37.4691,126.9451]
 };
+
+/* ---------- 노선 (실제 역 순서 · 공식 노선 색) ---------- */
 var LINES = [
-  {id:'L1', name:'1호선', c:'--l1', st:['SEO','CHG','JGK','JR3','JR5','DDM','DMA','SSD']},
-  {id:'L2', name:'2호선', c:'--l2', st:['AHN','CJR','CHG','EJ1','EJ3','EJ4','DDP','SDG','SWS','WSR']},
-  {id:'L3', name:'3호선', c:'--l3', st:['GBG','AGK','JR3','EJ3','CMR','DDE','YKS']},
-  {id:'L4', name:'4호선', c:'--l4', st:['HSD','HH','DDM','DDP','CMR','MD','HHY','SEO','SDE']}
+  {id:'1', name:'1호선', color:'#0052A4', br:[
+    ['도봉산','도봉','방학','창동','녹천','월계','광운대','석계','신이문','외대앞','회기','청량리','제기동','신설동','동묘앞','동대문','종로5가','종로3가','종각','시청','서울역','남영','용산','노량진','대방','신길','영등포','신도림','구로','구일','개봉','오류동','온수'],
+    ['구로','가산디지털단지','독산','금천구청']]},
+  {id:'2', name:'2호선', color:'#00A84D', br:[
+    ['시청','을지로입구','을지로3가','을지로4가','동대문역사문화공원','신당','상왕십리','왕십리','한양대','뚝섬','성수','건대입구','구의','강변','잠실나루','잠실','잠실새내','종합운동장','삼성','선릉','역삼','강남','교대','서초','방배','사당','낙성대','서울대입구','봉천','신림','신대방','구로디지털단지','대림','신도림','문래','영등포구청','당산','합정','홍대입구','신촌','이대','아현','충정로','시청'],
+    ['성수','용답','신답','용두','신설동'],
+    ['신도림','도림천','양천구청','신정네거리','까치산']]},
+  {id:'3', name:'3호선', color:'#EF7C1C', br:[
+    ['구파발','연신내','불광','녹번','홍제','무악재','독립문','경복궁','안국','종로3가','을지로3가','충무로','동대입구','약수','금호','옥수','압구정','신사','잠원','고속터미널','교대','남부터미널','양재','매봉','도곡','대치','학여울','대청','일원','수서','가락시장','경찰병원','오금']]},
+  {id:'4', name:'4호선', color:'#00A5DE', br:[
+    ['불암산','상계','노원','창동','쌍문','수유','미아','미아사거리','길음','성신여대입구','한성대입구','혜화','동대문','동대문역사문화공원','충무로','명동','회현','서울역','숙대입구','삼각지','신용산','이촌','동작','이수','사당','남태령']]},
+  {id:'5', name:'5호선', color:'#996CAC', br:[
+    ['방화','개화산','김포공항','송정','마곡','발산','우장산','화곡','까치산','신정','목동','오목교','양평','영등포구청','영등포시장','신길','여의도','여의나루','마포','공덕','애오개','충정로','서대문','광화문','종로3가','을지로4가','동대문역사문화공원','청구','신금호','행당','왕십리','마장','답십리','장한평','군자','아차산','광나루','천호','강동','길동','굽은다리','명일','고덕','상일동'],
+    ['강동','둔촌동','올림픽공원','방이','오금','개롱','거여','마천']]},
+  {id:'6', name:'6호선', color:'#CD7C2F', br:[
+    ['응암','역촌','불광','독바위','연신내','구산','응암'],
+    ['응암','새절','증산','디지털미디어시티','월드컵경기장','마포구청','망원','합정','상수','광흥창','대흥','공덕','효창공원앞','삼각지','녹사평','이태원','한강진','버티고개','약수','청구','신당','동묘앞','창신','보문','안암','고려대','월곡','상월곡','돌곶이','석계','태릉입구','화랑대','봉화산','신내']]},
+  {id:'7', name:'7호선', color:'#747F00', br:[
+    ['도봉산','수락산','마들','노원','중계','하계','공릉','태릉입구','먹골','중화','상봉','면목','사가정','용마산','중곡','군자','어린이대공원','건대입구','뚝섬유원지','청담','강남구청','학동','논현','반포','고속터미널','내방','이수','남성','숭실대입구','상도','장승배기','신대방삼거리','보라매','신풍','대림','남구로','가산디지털단지','철산','광명사거리','천왕','온수']]},
+  {id:'8', name:'8호선', color:'#E6186C', br:[
+    ['암사','천호','강동구청','몽촌토성','잠실','석촌','송파','가락시장','문정','장지','복정']]},
+  {id:'9', name:'9호선', color:'#BDB092', br:[
+    ['개화','김포공항','공항시장','신방화','마곡나루','양천향교','가양','증미','등촌','염창','신목동','선유도','당산','국회의사당','여의도','샛강','노량진','노들','흑석','동작','구반포','신반포','고속터미널','사평','신논현','언주','선정릉','삼성중앙','봉은사','종합운동장','삼전','석촌고분','석촌','송파나루','한성백제','올림픽공원','둔촌오륜','중앙보훈병원']]},
+  {id:'SU', name:'수인분당선', color:'#F5A200', br:[
+    ['청량리','왕십리','서울숲','압구정로데오','강남구청','선정릉','선릉','한티','도곡','구룡','개포동','대모산입구','수서','복정']]},
+  {id:'SB', name:'신분당선', color:'#D4003B', br:[
+    ['신사','논현','신논현','강남','양재','양재시민의숲','청계산입구']]},
+  {id:'GJ', name:'경의중앙선', color:'#77C4A3', br:[
+    ['수색','디지털미디어시티','가좌','홍대입구','서강대','공덕','효창공원앞','용산','이촌','서빙고','한남','옥수','응봉','왕십리','청량리','회기','중랑','상봉','망우']]},
+  {id:'AR', name:'공항철도', color:'#0090D2', br:[
+    ['서울역','공덕','홍대입구','디지털미디어시티','마곡나루','김포공항']]},
+  {id:'UI', name:'우이신설선', color:'#B0CE18', br:[
+    ['북한산우이','솔밭공원','4.19민주묘지','가오리','화계','삼양','삼양사거리','솔샘','북한산보국문','정릉','성신여대입구','보문','신설동']]},
+  {id:'SL', name:'신림선', color:'#6789CA', br:[
+    ['샛강','대방','서울지방병무청','보라매','보라매공원','보라매병원','당곡','신림','서원','서울대벤처타운','관악산']]}
 ];
-var HOT = {HH:1.15, DDP:.92, JR3:.86, SEO:.84, CHG:.74, WSR:.72, EJ1:.68, MD:.64, DDM:.62, CMR:.6, EJ3:.56, JGK:.55};
+
+var HOT = {'혜화':1.15,'강남':1.0,'잠실':.95,'홍대입구':.95,'고속터미널':.9,'서울역':.9,'신도림':.88,'동대문역사문화공원':.9,'신림':.85,'구로디지털단지':.85,'삼성':.85,'건대입구':.85,'종로3가':.84,'사당':.82,'선릉':.82,'역삼':.8,'여의도':.8,'왕십리':.8,'을지로입구':.78,'시청':.74,'가산디지털단지':.78,'노원':.72,'수서':.7,'합정':.72,'공덕':.74,'명동':.7,'천호':.68,'연신내':.66,'청량리':.72,'교대':.74};
+var CODE = {'혜화':'HH','동대문역사문화공원':'DDP','종로3가':'JR3','강남':'GN','왕십리':'WSR','서울역':'SEO','시청':'CHG','신림':'SLM','을지로3가':'EJ3','충무로':'CMR','을지로입구':'EJ1','동대문':'DDM'};
 var VOC_TYPES = ['속도저하','끊김','접속불가','기타'];
 var TYPE_TOK = ['--t1','--t2','--t3','--t4'];
 var PERIOD_LABEL = {'24h':'최근 24시간','7d':'최근 7일','30d':'최근 30일'};
@@ -195,17 +259,42 @@ var METRIC_LABEL = {voc:'VOC', load:'부하율', alarm:'장비알람'};
 var HEADLINE = {load:'선이 굵고 붉을수록 부하가 높습니다', voc:'원이 클수록 민원이 많습니다', alarm:'표식이 있는 곳에 미해제 알람이 있습니다'};
 var PROFILE = [.35,.25,.2,.18,.2,.35,.6,.9,1,.75,.62,.6,.65,.62,.6,.66,.78,.92,.98,1,.95,.86,.7,.5];
 
-var stationLines = {};
-LINES.forEach(function(l){ l.st.forEach(function(s){ (stationLines[s] = stationLines[s] || []).push(l.id); }); });
-var SEGS = [];
-LINES.forEach(function(l){ for (var i = 0; i < l.st.length - 1; i++){ SEGS.push({id:l.id + ':' + l.st[i] + '-' + l.st[i+1], line:l.id, a:l.st[i], b:l.st[i+1], rep:'REP-T-' + String(SEGS.length + 1).padStart(2,'0')}); } });
-var SEG_BY_ID = {}; SEGS.forEach(function(s){ SEG_BY_ID[s.id] = s; });
-var LINE_BY_ID = {}; LINES.forEach(function(l){ LINE_BY_ID[l.id] = l; });
+/* ---------- 파생 구조 ---------- */
+var LINE_BY_ID = {}, stationLines = {}, SEGS = [], SEG_BY_ID = {};
+LINES.forEach(function(l){
+  LINE_BY_ID[l.id] = l;
+  l.br.forEach(function(b){
+    b.forEach(function(s){
+      if (!C[s]) throw new Error('좌표 없음: ' + s);
+      var arr = stationLines[s] = stationLines[s] || [];
+      if (arr.indexOf(l.id) < 0) arr.push(l.id);
+    });
+    for (var i = 0; i < b.length - 1; i++){
+      var id = l.id + ':' + b[i] + '-' + b[i+1];
+      if (SEG_BY_ID[id]) continue;
+      var sg = {id:id, line:l.id, a:b[i], b:b[i+1], rep:'REP-T-' + String(SEGS.length + 1).padStart(3, '0')};
+      SEGS.push(sg); SEG_BY_ID[id] = sg;
+    }
+  });
+});
+var STATIONS = Object.keys(stationLines);
+STATIONS.forEach(function(s, i){ if (!CODE[s]) CODE[s] = 'S' + String(i + 1).padStart(3, '0'); });
+// 같은 두 역을 지나는 다른 노선은 나란히 그리기
+var pairCount = {}, pairIdx = {};
+SEGS.forEach(function(s){ var k = [s.a, s.b].sort().join('|'); pairCount[k] = (pairCount[k] || 0) + 1; });
+SEGS.forEach(function(s){ var k = [s.a, s.b].sort().join('|'); pairIdx[k] = (pairIdx[k] || 0); s.par = pairIdx[k] - (pairCount[k] - 1) / 2; pairIdx[k]++; s.flip = s.a > s.b; });
 
-function px(id){ var s = ST[id]; return [(s[2] - 126.948) * 10000, (37.594 - s[1]) * 12600]; }
-function nm(id){ return ST[id][0]; }
-function segName(s){ return nm(s.a) + '–' + nm(s.b); }
+// 투영: 경도·위도 → 지도 좌표 (위도 방향 1.26배 보정)
+var minLon = 1e9, maxLon = -1e9, minLat = 1e9, maxLat = -1e9;
+STATIONS.forEach(function(s){ var c = C[s]; minLon = Math.min(minLon, c[1]); maxLon = Math.max(maxLon, c[1]); minLat = Math.min(minLat, c[0]); maxLat = Math.max(maxLat, c[0]); });
+var PAD = 40, W = 1000, K = (W - PAD * 2) / (maxLon - minLon), H = Math.round((maxLat - minLat) * K * 1.26 + PAD * 2);
+var P = {};
+STATIONS.forEach(function(s){ var c = C[s]; P[s] = [PAD + (c[1] - minLon) * K, PAD + (maxLat - c[0]) * K * 1.26]; });
+var BASE = {x:0, y:0, w:W, h:H};
+
+function segName(s){ return s.a + '–' + s.b; }
 function cssv(t){ return 'var(' + t + ')'; }
+function lineBadge(lid){ var l = LINE_BY_ID[lid]; return '<span class="lb" style="background:' + l.color + '">' + l.name + '</span>'; }
 
 /* ---------- 가상 데이터 생성 ---------- */
 function hashStr(s){ var h = 2166136261; for (var i = 0; i < s.length; i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
@@ -214,22 +303,24 @@ function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
 
 var ALARMS = {
   '5G':[
-    {id:'A-0001', sev:'Critical', st:'HH', eq:'RU-HH-03', at:'21:42'},
-    {id:'A-0002', sev:'Critical', seg:'L4:HH-DDM', at:'21:40'},
-    {id:'A-0003', sev:'Major', st:'DDP', eq:'DU-DDP-01', at:'20:15'},
-    {id:'A-0005', sev:'Major', seg:'L3:EJ3-CMR', at:'18:30'},
-    {id:'A-0004', sev:'Minor', st:'JR3', eq:'RU-JR3-01', at:'19:05'}
+    {id:'A-0001', sev:'Critical', st:'혜화', eq:'RU-HH-03', at:'21:42'},
+    {id:'A-0002', sev:'Critical', seg:'4:혜화-동대문', at:'21:40'},
+    {id:'A-0003', sev:'Major', st:'동대문역사문화공원', eq:'DU-DDP-01', at:'20:15'},
+    {id:'A-0006', sev:'Major', st:'강남', eq:'RU-GN-02', at:'20:55'},
+    {id:'A-0005', sev:'Major', seg:'3:을지로3가-충무로', at:'18:30'},
+    {id:'A-0004', sev:'Minor', st:'종로3가', eq:'RU-JR3-01', at:'19:05'}
   ],
   'LTE':[
-    {id:'A-0101', sev:'Critical', st:'WSR', eq:'DU-WSR-01', at:'21:10'},
-    {id:'A-0102', sev:'Major', st:'SEO', eq:'RU-SEO-02', at:'20:48'},
-    {id:'A-0104', sev:'Minor', st:'CHG', eq:'RU-CHG-01', at:'16:05'},
-    {id:'A-0103', sev:'Minor', seg:'L2:EJ1-EJ3', at:'17:22'}
+    {id:'A-0101', sev:'Critical', st:'왕십리', eq:'DU-WSR-01', at:'21:10'},
+    {id:'A-0105', sev:'Critical', st:'신림', eq:'RU-SLM-03', at:'21:25'},
+    {id:'A-0102', sev:'Major', st:'서울역', eq:'RU-SEO-02', at:'20:48'},
+    {id:'A-0104', sev:'Minor', st:'시청', eq:'RU-CHG-01', at:'16:05'},
+    {id:'A-0103', sev:'Minor', seg:'2:을지로입구-을지로3가', at:'17:22'}
   ]
 };
 var SEV_RANK = {Critical:0, Major:1, Minor:2};
 var SEV_TOK = {Critical:'--crit', Major:'--major', Minor:'--warn'};
-var MISSING = {'5G':{'L4:HH-DDM':true}, 'LTE':{}};
+var MISSING = {'5G':{'4:혜화-동대문':true}, 'LTE':{}};
 
 var cache = {};
 function getData(tech, period){
@@ -239,35 +330,35 @@ function getData(tech, period){
   var pAdj = {'24h':0, '7d':-3, '30d':-5}[period], tAdj = tech === 'LTE' ? 4 : 0;
   var vScale = {'24h':16, '7d':84, '30d':310}[period] * (tech === 'LTE' ? 1.25 : 1);
   var st = {}, seg = {}, eq = [];
-  Object.keys(ST).forEach(function(id){
-    var hot = HOT[id] != null ? HOT[id] : .3 + r() * .22;
-    if (tech === 'LTE' && id === 'WSR') hot += .2;
-    var load = clamp(Math.round(42 + hot * 44 + (r() - .5) * 10 + pAdj + tAdj), 12, 99);
+  STATIONS.forEach(function(id){
+    var hot = HOT[id] != null ? HOT[id] : .22 + r() * .3;
+    if (tech === 'LTE' && (id === '왕십리' || id === '신림')) hot += .2;
+    var load = clamp(Math.round(40 + hot * 46 + (r() - .5) * 10 + pAdj + tAdj), 12, 99);
     var voc = Math.max(0, Math.round(hot * hot * vScale * (.7 + r() * .6)));
     var w = [r() + .6, r() + .4, r() * .6 + .2, r() * .4 + .1];
-    if (tech === '5G' && id === 'HH') w[1] += 1.4;
+    if (tech === '5G' && id === '혜화') w[1] += 1.4;
     var sw = w.reduce(function(a, b){ return a + b; }, 0), types = w.map(function(x){ return Math.round(voc * x / sw); });
     types[3] = Math.max(0, voc - types[0] - types[1] - types[2]);
-    var ru = [
-      {id:'RU-' + id + '-01', loc:'대합실 B1', load:clamp(load - Math.round(4 + r() * 14), 5, 99)},
-      {id:'RU-' + id + '-02', loc:'승강장 B2', load:clamp(load - Math.round(1 + r() * 9), 5, 99)},
-      {id:'RU-' + id + '-03', loc:'승강장 B2', load:load},
-      {id:'DU-' + id + '-01', loc:'통신실', load:clamp(load - Math.round(10 + r() * 15), 5, 99)}
+    var cd = CODE[id];
+    var list = [
+      {id:'RU-' + cd + '-01', loc:'대합실 B1', load:clamp(load - Math.round(4 + r() * 14), 5, 99)},
+      {id:'RU-' + cd + '-02', loc:'승강장 B2', load:clamp(load - Math.round(1 + r() * 9), 5, 99)},
+      {id:'RU-' + cd + '-03', loc:'승강장 B2', load:load},
+      {id:'DU-' + cd + '-01', loc:'통신실', load:clamp(load - Math.round(10 + r() * 15), 5, 99)}
     ];
-    ru.forEach(function(e){ e.station = id; eq.push(e); });
-    st[id] = {id:id, load:load, voc:voc, types:types, equip:ru};
+    list.forEach(function(e){ e.station = id; eq.push(e); });
+    st[id] = {id:id, load:load, voc:voc, types:types, equip:list};
   });
   SEGS.forEach(function(s){
     var missing = !!MISSING[tech][s.id];
     var v = missing ? null : clamp(Math.round((st[s.a].load + st[s.b].load) / 2 + (r() - .5) * 18), 10, 99);
-    var dist = (0.4 + r() * 0.5).toFixed(1);
-    seg[s.id] = {id:s.id, load:v, rep:s.rep, dist:dist};
+    seg[s.id] = {id:s.id, load:v, rep:s.rep, dist:(0.4 + r() * 0.8).toFixed(1)};
     eq.push({id:s.rep, loc:'터널 ' + segName(s), load:v, seg:s.id});
   });
   var alarms = ALARMS[tech].map(function(a){
     var o = Object.assign({}, a);
-    if (a.seg){ o.eq = SEG_BY_ID[a.seg].rep; o.where = segName(SEG_BY_ID[a.seg]) + ' 터널'; o.focus = SEG_BY_ID[a.seg].a; }
-    else { o.where = nm(a.st) + (a.eq.indexOf('DU') === 0 ? ' 통신실' : ''); o.focus = a.st; }
+    if (a.seg){ var s = SEG_BY_ID[a.seg]; o.eq = s.rep; o.where = segName(s) + ' 터널'; o.focus = s.a; }
+    else { o.where = a.st + (a.eq.indexOf('DU') === 0 ? ' 통신실' : ''); o.focus = a.st; }
     return o;
   }).sort(function(a, b){ return SEV_RANK[a.sev] - SEV_RANK[b.sev] || (a.at < b.at ? 1 : -1); });
   var eqSev = {};
@@ -275,29 +366,24 @@ function getData(tech, period){
   var d = {st:st, seg:seg, eq:eq, alarms:alarms, eqSev:eqSev};
   cache[key] = d; return d;
 }
-function stationWorstAlarm(d, id){
-  var w = null;
-  d.alarms.forEach(function(a){ if (a.st === id && (!w || SEV_RANK[a.sev] < SEV_RANK[w])) w = a.sev; });
-  return w;
-}
+function stationAlarms(d, id){ return d.alarms.filter(function(a){ return a.st === id || (a.seg && (SEG_BY_ID[a.seg].a === id || SEG_BY_ID[a.seg].b === id)); }); }
+function worstSev(list){ var w = null; list.forEach(function(a){ if (!w || SEV_RANK[a.sev] < SEV_RANK[w]) w = a.sev; }); return w; }
 function series(id, peak, tech, period){
   var r = rng(hashStr(id + tech + period + 'h'));
   return PROFILE.map(function(p){ return clamp(Math.round(peak * p * (.93 + r() * .07)), 0, 100); });
 }
 function loadTok(v){ return v == null ? '--nodata' : v >= 85 ? '--crit' : v >= 70 ? '--warn' : '--ok'; }
-function loadWord(v){ return v == null ? '데이터 없음' : v >= 85 ? '위험' : v >= 70 ? '주의' : '정상'; }
 
 /* ---------- 상태 ---------- */
-var S = {tech:'5G', metric:'load', period:'24h', line:'all', sel:null, vb:{x:0, y:0, w:960, h:660}};
-var BASE = {x:0, y:0, w:960, h:660};
+var S = {tech:'5G', metric:'load', period:'24h', line:'all', sel:null, vb:Object.assign({}, BASE)};
 
 function readHash(){
   var h = (location.hash || '').replace('#', '').split('-');
   if (h.length !== 3) return;
-  var t = {'5g':'5G', 'lte':'LTE'}[h[0]], m = h[1], p = h[2];
+  var t = {'5g':'5G', 'lte':'LTE'}[h[0]];
   if (t) S.tech = t;
-  if (METRIC_LABEL[m]) S.metric = m;
-  if (PERIOD_LABEL[p]) S.period = p;
+  if (METRIC_LABEL[h[1]]) S.metric = h[1];
+  if (PERIOD_LABEL[h[2]]) S.period = h[2];
 }
 function writeHash(){
   var h = '#' + S.tech.toLowerCase() + '-' + S.metric + '-' + S.period;
@@ -307,6 +393,9 @@ function writeHash(){
 /* ---------- SVG 도우미 ---------- */
 var NS = 'http://www.w3.org/2000/svg';
 var svg = document.getElementById('map');
+var box = document.getElementById('mapbox');
+var pop = document.getElementById('pop');
+svg.style.aspectRatio = W + ' / ' + H;
 function el(tag, attrs, parent, style){
   var e = document.createElementNS(NS, tag);
   for (var k in attrs) e.setAttribute(k, attrs[k]);
@@ -314,7 +403,7 @@ function el(tag, attrs, parent, style){
   if (parent) parent.appendChild(e);
   return e;
 }
-function setVB(){ var v = S.vb; svg.setAttribute('viewBox', v.x + ' ' + v.y + ' ' + v.w + ' ' + v.h); }
+function setVB(){ var v = S.vb; svg.setAttribute('viewBox', v.x + ' ' + v.y + ' ' + v.w + ' ' + v.h); positionPop(); }
 
 /* ---------- 렌더 ---------- */
 function render(){
@@ -327,6 +416,7 @@ function render(){
   renderChips();
   renderMap(d);
   renderLegend();
+  renderPop(d);
   renderDetail(d);
   renderPanels(d);
 }
@@ -338,108 +428,112 @@ function renderControls(){
 }
 
 function renderKpis(d){
-  var ids = Object.keys(d.st);
-  var voc = ids.reduce(function(a, id){ return a + d.st[id].voc; }, 0);
-  var hot = ids.filter(function(id){ return d.st[id].load >= 85; }).length;
+  var voc = STATIONS.reduce(function(a, id){ return a + d.st[id].voc; }, 0);
+  var hot = STATIONS.filter(function(id){ return d.st[id].load >= 85; }).length;
   var crit = d.alarms.filter(function(a){ return a.sev === 'Critical'; }).length;
-  var ru = d.eq.filter(function(e){ return e.id.indexOf('RU') === 0; }).length;
-  var du = d.eq.filter(function(e){ return e.id.indexOf('DU') === 0; }).length;
-  var rep = d.eq.filter(function(e){ return e.id.indexOf('REP') === 0; }).length;
+  var ru = 0, du = 0, rep = 0;
+  d.eq.forEach(function(e){ if (e.id.indexOf('RU') === 0) ru++; else if (e.id.indexOf('DU') === 0) du++; else rep++; });
   document.getElementById('kpis').innerHTML =
     kpi('VOC 건수', voc.toLocaleString('ko-KR') + '건', PERIOD_LABEL[S.period]) +
-    kpi('부하율 85% 이상 역', hot + '개', '전체 ' + ids.length + '개 역 중') +
+    kpi('부하율 85% 이상 역', hot + '개', '전체 ' + STATIONS.length + '개 역 중') +
     kpi('미해제 알람', d.alarms.length + '건', 'Critical ' + crit + '건', crit > 0) +
-    kpi('관리 장비', (ru + du + rep) + '대', 'RU ' + ru + ' · DU ' + du + ' · 중계기 ' + rep);
+    kpi('관리 장비', (ru + du + rep).toLocaleString('ko-KR') + '대', 'RU ' + ru + ' · DU ' + du + ' · 중계기 ' + rep);
 }
 function kpi(k, v, s, crit){ return '<div class="kpi"><span class="k">' + k + '</span><span class="v num' + (crit ? ' crit' : '') + '">' + v + '</span><span class="s">' + s + '</span></div>'; }
 
 function renderChips(){
-  var box = document.getElementById('line-chips');
   var items = [{id:'all', name:'전체'}].concat(LINES);
-  box.innerHTML = items.map(function(l){
+  document.getElementById('line-chips').innerHTML = items.map(function(l){
     return '<button type="button" class="chip" id="line-' + l.id + '" data-line="' + l.id + '" aria-pressed="' + (S.line === l.id) + '">' +
-      (l.c ? '<span class="dot" style="background:' + cssv(l.c) + '"></span>' : '') + l.name + '</button>';
+      (l.color ? '<span class="dot" style="background:' + l.color + '"></span>' : '') + l.name + '</button>';
   }).join('');
 }
 
 function lineOn(lid){ return S.line === 'all' || S.line === lid; }
 function stationOn(id){ return S.line === 'all' || stationLines[id].indexOf(S.line) >= 0; }
-function segWidth(v){ return 3 + 15 * Math.sqrt(v / 100); }
 
 function renderMap(d){
   while (svg.firstChild) svg.removeChild(svg.firstChild);
   setVB();
+  var k = S.vb.w / W, s = Math.pow(k, .78);           // 확대해도 화면상 크기가 과하게 커지지 않게
+  var zoomed = k < .55;
+  var gHalo = el('g', {fill:'none', 'stroke-linecap':'round'}, svg);
   var gSeg = el('g', {fill:'none', 'stroke-linecap':'round'}, svg);
   var gHit = el('g', {}, svg);
   var gMark = el('g', {}, svg);
   var gSt = el('g', {}, svg);
-  var gLab = el('g', {'font-size':'11.5'}, svg);
-  var maxVoc = Math.max.apply(null, Object.keys(d.st).map(function(id){ return d.st[id].voc; })) || 1;
+  var gLab = el('g', {}, svg);
+  var maxVoc = Math.max.apply(null, STATIONS.map(function(id){ return d.st[id].voc; })) || 1;
+  var lw = 3.4 * s;
 
-  SEGS.forEach(function(s){
-    var a = px(s.a), b = px(s.b), on = lineOn(s.line), v = d.seg[s.id].load;
-    var selected = S.sel && S.sel.type === 'segment' && S.sel.id === s.id;
-    var style = {opacity: on ? '1' : '.12'};
-    var attrs = {x1:a[0], y1:a[1], x2:b[0], y2:b[1]};
-    if (S.metric === 'load'){
-      style.stroke = cssv(loadTok(v));
-      attrs['stroke-width'] = v == null ? 3 : segWidth(v).toFixed(1);
-      if (v == null) attrs['stroke-dasharray'] = '2 6';
-    } else {
-      style.stroke = cssv(LINE_BY_ID[s.line].c);
-      attrs['stroke-width'] = 4;
-      style.opacity = on ? (S.metric === 'alarm' ? '.35' : '.6') : '.08';
+  SEGS.forEach(function(sg){
+    var a = P[sg.a], b = P[sg.b], on = lineOn(sg.line), v = d.seg[sg.id].load;
+    var dx = b[0] - a[0], dy = b[1] - a[1], len = Math.sqrt(dx * dx + dy * dy) || 1;
+    var off = sg.par * lw * 1.15 * (sg.flip ? -1 : 1), nx = -dy / len * off, ny = dx / len * off;
+    var at = {x1:a[0] + nx, y1:a[1] + ny, x2:b[0] + nx, y2:b[1] + ny};
+    var col = LINE_BY_ID[sg.line].color;
+    var selected = S.sel && S.sel.type === 'segment' && S.sel.id === sg.id;
+
+    if (S.metric === 'load' && on && v != null && v >= 70){
+      el('line', Object.assign({}, at, {'stroke-width':((4 + 16 * Math.sqrt(v / 100)) * s).toFixed(2)}), gHalo, {stroke:cssv(loadTok(v)), opacity:'.55'});
     }
-    if (selected){ el('line', Object.assign({}, attrs, {'stroke-width': +attrs['stroke-width'] + 6}), gSeg, {stroke:cssv('--ink'), opacity:'1'}); }
-    el('line', attrs, gSeg, style);
+    if (selected) el('line', Object.assign({}, at, {'stroke-width':(lw + 7 * s).toFixed(2)}), gHalo, {stroke:cssv('--ink')});
+    var op = !on ? '.1' : S.metric === 'alarm' ? '.55' : '1';
+    var la = Object.assign({}, at, {'stroke-width':lw.toFixed(2)});
+    if (S.metric === 'load' && v == null && on){ la['stroke-dasharray'] = (2 * s) + ' ' + (5 * s); el('line', la, gSeg, {stroke:cssv('--nodata')}); }
+    else el('line', la, gSeg, {stroke:col, opacity:op});
+
     if (on){
-      var hit = el('line', {x1:a[0], y1:a[1], x2:b[0], y2:b[1], 'stroke-width':22, class:'seg-hit', 'data-seg':s.id}, gHit, {stroke:'transparent'});
-      var t = el('title', {}, hit); t.textContent = LINE_BY_ID[s.line].name + ' ' + segName(s) + ' 터널 · 부하율 ' + (v == null ? '데이터 없음' : v + '%');
+      var hit = el('line', Object.assign({}, at, {'stroke-width':(14 * s).toFixed(2), class:'seg-hit', 'data-seg':sg.id}), gHit, {stroke:'transparent'});
+      el('title', {}, hit).textContent = LINE_BY_ID[sg.line].name + ' ' + segName(sg) + ' 터널 · 부하율 ' + (v == null ? '데이터 없음' : v + '%');
     }
     if (S.metric === 'alarm' && on){
-      var al = d.alarms.filter(function(x){ return x.seg === s.id; })[0];
+      var al = d.alarms.filter(function(x){ return x.seg === sg.id; })[0];
       if (al){
-        var mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
-        if (al.sev === 'Critical') el('rect', {x:mx - 10, y:my - 10, width:20, height:20, rx:4, class:'pulse'}, gMark, {fill:cssv(SEV_TOK[al.sev])});
-        el('rect', {x:mx - 10, y:my - 10, width:20, height:20, rx:4}, gMark, {fill:cssv(SEV_TOK[al.sev]), stroke:cssv('--surface'), strokeWidth:'2'});
-        var tt = el('text', {x:mx, y:my + 4.5, 'text-anchor':'middle', 'font-size':'13', 'font-weight':'700'}, gMark, {fill:'#FFFFFF'}); tt.textContent = 'T';
+        var mx = (at.x1 + at.x2) / 2, my = (at.y1 + at.y2) / 2, h = 8 * s;
+        var gm = el('g', {'data-seg':sg.id, class:'seg-hit'}, gMark);
+        if (al.sev === 'Critical') el('rect', {x:mx - h, y:my - h, width:h * 2, height:h * 2, rx:2 * s, class:'pulse'}, gm, {fill:cssv(SEV_TOK[al.sev])});
+        el('rect', {x:mx - h, y:my - h, width:h * 2, height:h * 2, rx:2 * s}, gm, {fill:cssv(SEV_TOK[al.sev]), stroke:cssv('--surface'), strokeWidth:String(1.5 * s)});
+        el('text', {x:mx, y:my + 4 * s, 'text-anchor':'middle', 'font-size':(11 * s).toFixed(2), 'font-weight':'700'}, gm, {fill:'#FFFFFF'}).textContent = 'T';
       }
     }
   });
 
-  Object.keys(ST).forEach(function(id){
-    var p = px(id), on = stationOn(id), sd = d.st[id], transfer = stationLines[id].length > 1;
+  // 지표별로 이름을 꼭 보여줄 역 (확대 전)
+  var must = {};
+  STATIONS.forEach(function(id){ if (stationLines[id].length >= 3) must[id] = 1; });
+  if (S.metric === 'load') STATIONS.slice().sort(function(a, b){ return d.st[b].load - d.st[a].load; }).slice(0, 6).forEach(function(id){ must[id] = 1; });
+  if (S.metric === 'voc') STATIONS.slice().sort(function(a, b){ return d.st[b].voc - d.st[a].voc; }).slice(0, 6).forEach(function(id){ must[id] = 1; });
+  if (S.metric === 'alarm') d.alarms.forEach(function(a){ must[a.focus] = 1; if (a.seg) must[SEG_BY_ID[a.seg].b] = 1; });
+  if (S.sel && S.sel.type === 'station') must[S.sel.id] = 1;
+
+  STATIONS.forEach(function(id){
+    var p = P[id], on = stationOn(id), sd = d.st[id], transfer = stationLines[id].length > 1;
     var selected = S.sel && S.sel.type === 'station' && S.sel.id === id;
     var g = el('g', {class:'st', 'data-st':id, tabindex: on ? '0' : '-1', role:'button'}, gSt, {opacity: on ? '1' : '.15'});
-    var label = nm(id) + ', ' + METRIC_LABEL[S.metric] + ' ';
+    var r0 = (transfer ? 4.6 : 3.2) * s, label = id + ', ' + METRIC_LABEL[S.metric] + ' ';
+    if (selected) el('circle', {cx:p[0], cy:p[1], r:r0 + 6 * s}, g, {fill:'none', stroke:cssv('--ink'), strokeWidth:String(2.2 * s)});
     if (S.metric === 'load'){
-      var r0 = transfer ? 8 : 6;
-      el('circle', {cx:p[0], cy:p[1], r:r0 + 2, class:'st-ring'}, g, {fill:cssv('--surface'), stroke:selected ? cssv('--ink') : cssv('--surface'), strokeWidth: selected ? '3' : '2'});
-      el('circle', {cx:p[0], cy:p[1], r:r0}, g, {fill:cssv(loadTok(sd.load))});
+      var hotSt = sd.load >= 70;
+      el('circle', {cx:p[0], cy:p[1], r: hotSt ? r0 * 1.25 : r0, class:'st-core'}, g, {fill: hotSt ? cssv(loadTok(sd.load)) : cssv('--surface'), stroke: hotSt ? cssv('--surface') : cssv('--ink'), strokeWidth:String((hotSt ? 1.4 : 1.3) * s)});
       label += sd.load + '%';
     } else if (S.metric === 'voc'){
-      var rv = 4 + 20 * Math.sqrt(sd.voc / maxVoc);
-      el('circle', {cx:p[0], cy:p[1], r:rv, class:'st-ring'}, g, {fill:cssv('--accent'), fillOpacity:'.22', stroke: selected ? cssv('--ink') : cssv('--accent'), strokeWidth: selected ? '3' : '1.8'});
-      if (rv >= 12){ var tv = el('text', {x:p[0], y:p[1] + 4, 'text-anchor':'middle', 'font-size':'11', 'font-weight':'700'}, g, {fill:cssv('--ink')}); tv.textContent = sd.voc; }
+      var rv = (2.5 + 15 * Math.sqrt(sd.voc / maxVoc)) * s;
+      el('circle', {cx:p[0], cy:p[1], r:rv, class:'st-core'}, g, {fill:cssv('--accent'), fillOpacity:'.25', stroke:cssv('--accent'), strokeWidth:String(1.3 * s)});
+      if (rv >= 11 * s && (zoomed || sd.voc / maxVoc > .45)) el('text', {x:p[0], y:p[1] + 3.6 * s, 'text-anchor':'middle', 'font-size':(10 * s).toFixed(2), 'font-weight':'700'}, g, {fill:cssv('--ink')}).textContent = sd.voc;
       label += sd.voc + '건';
     } else {
-      var w = stationWorstAlarm(d, id);
-      if (w === 'Critical') el('circle', {cx:p[0], cy:p[1], r:11, class:'pulse'}, g, {fill:cssv('--crit')});
-      el('circle', {cx:p[0], cy:p[1], r: w ? 9 : 5, class:'st-ring'}, g, {fill: w ? cssv(SEV_TOK[w]) : cssv('--surface'), stroke: selected ? cssv('--ink') : (w ? cssv('--surface') : cssv('--ink-2')), strokeWidth: selected ? '3' : '2'});
+      var w = worstSev(d.alarms.filter(function(a){ return a.st === id; }));
+      if (w === 'Critical') el('circle', {cx:p[0], cy:p[1], r:9 * s, class:'pulse'}, g, {fill:cssv('--crit')});
+      el('circle', {cx:p[0], cy:p[1], r: w ? 7 * s : r0, class:'st-core'}, g, {fill: w ? cssv(SEV_TOK[w]) : cssv('--surface'), stroke: w ? cssv('--surface') : cssv('--ink-2'), strokeWidth:String(1.3 * s)});
       label += w ? w + ' 알람' : '알람 없음';
     }
-    el('circle', {cx:p[0], cy:p[1], r:14}, g, {fill:'transparent'});
+    el('circle', {cx:p[0], cy:p[1], r:Math.max(9 * s, r0 + 4 * s)}, g, {fill:'transparent'});
     g.setAttribute('aria-label', label);
 
-    if (on){
-      var pos = ST[id][3], off = S.metric === 'voc' ? Math.max(10, 6 + 20 * Math.sqrt(sd.voc / maxVoc)) : 12;
-      var lx = p[0], ly = p[1], anchor = 'middle';
-      if (pos === 'r'){ lx += off; ly += 4; anchor = 'start'; }
-      else if (pos === 'l'){ lx -= off; ly += 4; anchor = 'end'; }
-      else if (pos === 't'){ ly -= off; }
-      else { ly += off + 9; }
-      var t = el('text', {x:lx, y:ly, 'text-anchor':anchor, 'font-weight': (transfer || selected) ? '700' : '400', 'paint-order':'stroke', 'stroke-width':'3.5', 'stroke-linejoin':'round'}, gLab, {fill: cssv(transfer || selected ? '--ink' : '--ink-2'), stroke:cssv('--surface')});
-      t.textContent = nm(id);
+    if (on && (zoomed || must[id])){
+      var t = el('text', {x:p[0] + 7 * s, y:p[1] - 6 * s, 'font-size':(11 * s).toFixed(2), 'font-weight': (transfer || selected || must[id]) ? '700' : '400', 'paint-order':'stroke', 'stroke-width':(3.2 * s).toFixed(2), 'stroke-linejoin':'round'}, gLab, {fill:cssv(transfer || must[id] ? '--ink' : '--ink-2'), stroke:cssv('--surface')});
+      t.textContent = id;
     }
   });
 }
@@ -447,12 +541,11 @@ function renderMap(d){
 function renderLegend(){
   var h = '';
   if (S.metric === 'load'){
-    h = '<span class="it"><svg width="44" height="14" aria-hidden="true"><line x1="4" y1="7" x2="40" y2="7" stroke-width="4" stroke-linecap="round" style="stroke:var(--ink-2)"/></svg>굵기 = 터널 부하율</span>' +
+    h = '<span class="it"><svg width="46" height="18" aria-hidden="true"><line x1="6" y1="9" x2="40" y2="9" stroke-width="12" stroke-linecap="round" style="stroke:var(--crit);opacity:.55"/><line x1="6" y1="9" x2="40" y2="9" stroke-width="3.4" stroke-linecap="round" stroke="#00A84D"/></svg>노선 색 위 띠 굵기 = 터널 부하율(70% 이상)</span>' +
       leg('--ok', '70% 미만 정상') + leg('--warn', '70–85% 주의') + leg('--crit', '85% 이상 위험') +
-      '<span class="it"><svg width="44" height="14" aria-hidden="true"><line x1="4" y1="7" x2="40" y2="7" stroke-width="3" stroke-dasharray="2 6" stroke-linecap="round" style="stroke:var(--nodata)"/></svg>데이터 없음</span>';
+      '<span class="it"><svg width="40" height="12" aria-hidden="true"><line x1="4" y1="6" x2="36" y2="6" stroke-width="3" stroke-dasharray="2 5" stroke-linecap="round" style="stroke:var(--nodata)"/></svg>데이터 없음</span>';
   } else if (S.metric === 'voc'){
-    h = '<span class="it"><svg width="40" height="24" aria-hidden="true"><circle cx="8" cy="14" r="4" style="fill:var(--accent);fill-opacity:.22;stroke:var(--accent)"/><circle cx="27" cy="12" r="10" style="fill:var(--accent);fill-opacity:.22;stroke:var(--accent)"/></svg>원 크기 = 역별 VOC 건수 (원 안 숫자 = 건수)</span>' +
-      LINES.map(function(l){ return leg(l.c, l.name); }).join('');
+    h = '<span class="it"><svg width="40" height="24" aria-hidden="true"><circle cx="8" cy="14" r="4" style="fill:var(--accent);fill-opacity:.25;stroke:var(--accent)"/><circle cx="27" cy="12" r="10" style="fill:var(--accent);fill-opacity:.25;stroke:var(--accent)"/></svg>원 크기 = 역별 VOC 건수</span>';
   } else {
     h = leg('--crit', 'Critical') + leg('--major', 'Major') + leg('--warn', 'Minor') +
       '<span class="it"><svg width="18" height="18" aria-hidden="true"><rect x="1" y="1" width="16" height="16" rx="3" style="fill:var(--ink-2)"/><text x="9" y="13.5" text-anchor="middle" font-size="11" font-weight="700" fill="#FFFFFF">T</text></svg>터널 장비(중계기) 알람</span>';
@@ -461,11 +554,48 @@ function renderLegend(){
 }
 function leg(tok, txt){ return '<span class="it"><span class="dot" style="background:' + cssv(tok) + '"></span>' + txt + '</span>'; }
 
+/* ---------- 지도 위 정보 카드 ---------- */
+function renderPop(d){
+  if (!S.sel || S.sel.type !== 'station'){ pop.hidden = true; pop.innerHTML = ''; return; }
+  var id = S.sel.id, sd = d.st[id], al = stationAlarms(d, id);
+  pop.innerHTML =
+    '<div class="pop-head"><div><strong>' + id + '</strong><div class="lines">' + stationLines[id].map(lineBadge).join('') + '</div></div>' +
+    '<button type="button" class="x" data-act="close" aria-label="정보 카드 닫기">×</button></div>' +
+    '<div class="pop-facts">' +
+      '<div><div class="k">부하율</div><div class="v num" style="color:' + cssv(loadTok(sd.load)) + '">' + sd.load + '%</div></div>' +
+      '<div><div class="k">VOC</div><div class="v num">' + sd.voc + '건</div></div>' +
+      '<div><div class="k">알람</div><div class="v num"' + (al.length ? ' style="color:var(--crit)"' : '') + '>' + al.length + '건</div></div></div>' +
+    (al.length ? '<div class="al">' + al.map(function(a){ return '<span><span class="sev ' + a.sev + '" style="min-width:0;height:18px;font-size:10px">' + a.sev + '</span> ' + a.eq + ' · ' + a.at + '</span>'; }).join('') + '</div>' : '') +
+    '<div class="pop-actions"><button type="button" data-act="detail">장비 상세 보기</button><button type="button" class="ghost" data-act="zoom">이 역 확대</button></div>';
+  pop.hidden = false;
+  positionPop();
+}
+function positionPop(){
+  if (pop.hidden || !S.sel || S.sel.type !== 'station') return;
+  var m = svg.getScreenCTM(); if (!m) return;
+  var pt = svg.createSVGPoint(); pt.x = P[S.sel.id][0]; pt.y = P[S.sel.id][1];
+  var sp = pt.matrixTransform(m), br = box.getBoundingClientRect();
+  var x = sp.x - br.left, y = sp.y - br.top;
+  if (x < 0 || y < 0 || x > br.width || y > br.height){ pop.style.visibility = 'hidden'; return; }
+  pop.style.visibility = 'visible';
+  var pw = pop.offsetWidth, ph = pop.offsetHeight, gap = 14;
+  var left = x + gap; if (left + pw > br.width - 8) left = x - gap - pw; if (left < 8) left = Math.max(8, Math.min(br.width - pw - 8, x - pw / 2));
+  var top = y - ph / 2; top = Math.max(8, Math.min(br.height - ph - 8, top));
+  pop.style.left = left + 'px'; pop.style.top = top + 'px';
+}
+pop.addEventListener('click', function(e){
+  var b = e.target.closest('button'); if (!b) return;
+  var act = b.dataset.act;
+  if (act === 'close'){ S.sel = null; render(); }
+  else if (act === 'zoom'){ focusOn(S.sel.id, 300); render(); }
+  else if (act === 'detail'){ var det = document.getElementById('detail'); det.scrollIntoView({behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block:'start'}); var f = det.querySelector('button'); if (f) f.focus({preventScroll:true}); }
+});
+
 /* ---------- 오른쪽 패널 ---------- */
 function renderPanels(d){
   var a = document.getElementById('panel-a'), b = document.getElementById('panel-b');
   if (S.metric === 'load'){
-    var items = Object.keys(d.st).filter(stationOn).map(function(id){ return {type:'station', id:id, name:nm(id), kind:'역사', v:d.st[id].load, lines:stationLines[id]}; })
+    var items = STATIONS.filter(stationOn).map(function(id){ return {type:'station', id:id, name:id, kind:'역사', v:d.st[id].load, lines:stationLines[id]}; })
       .concat(SEGS.filter(function(s){ return lineOn(s.line) && d.seg[s.id].load != null; }).map(function(s){ return {type:'segment', id:s.id, name:segName(s), kind:'터널', v:d.seg[s.id].load, lines:[s.line]}; }))
       .sort(function(x, y){ return y.v - x.v; }).slice(0, 5);
     a.innerHTML = '<h2>부하 높은 구간 TOP 5</h2><div class="rows">' + items.map(function(it, i){
@@ -478,18 +608,18 @@ function renderPanels(d){
     var target = S.sel || (items[0] ? {type:items[0].type, id:items[0].id} : null);
     b.innerHTML = target ? loadChart(d, target) : '';
   } else if (S.metric === 'voc'){
-    var top = Object.keys(d.st).filter(stationOn).map(function(id){ return d.st[id]; }).sort(function(x, y){ return y.voc - x.voc; }).slice(0, 5);
-    var maxV = top.length ? top[0].voc : 1;
+    var top = STATIONS.filter(stationOn).map(function(id){ return d.st[id]; }).sort(function(x, y){ return y.voc - x.voc; }).slice(0, 5);
+    var maxV = top.length ? top[0].voc || 1 : 1;
     a.innerHTML = '<h2>VOC 많은 역 TOP 5</h2><div class="rows">' + top.map(function(s, i){
       var mi = s.types.indexOf(Math.max.apply(null, s.types));
       var cur = S.sel && S.sel.type === 'station' && S.sel.id === s.id;
       return '<button type="button" class="row" data-pick="station|' + s.id + '" aria-current="' + cur + '">' +
-        '<span class="name"><span class="rank">' + (i + 1) + '</span>' + nm(s.id) + ' <span class="sub">주요 유형 ' + VOC_TYPES[mi] + '</span></span>' +
+        '<span class="name"><span class="rank">' + (i + 1) + '</span>' + s.id + ' <span class="sub">주요 유형 ' + VOC_TYPES[mi] + '</span></span>' +
         '<span class="val num">' + s.voc.toLocaleString('ko-KR') + '건</span>' +
         '<span class="bar"><i style="width:' + (s.voc / maxV * 100).toFixed(1) + '%;background:' + cssv('--accent') + '"></i></span></button>';
     }).join('') + '</div>';
     var sum = [0,0,0,0];
-    Object.keys(d.st).filter(stationOn).forEach(function(id){ d.st[id].types.forEach(function(v, k){ sum[k] += v; }); });
+    STATIONS.filter(stationOn).forEach(function(id){ d.st[id].types.forEach(function(v, k){ sum[k] += v; }); });
     var tot = sum.reduce(function(x, y){ return x + y; }, 0) || 1;
     b.innerHTML = '<h2>유형별 비율</h2><div class="stack" role="img" aria-label="VOC 유형별 비율: ' + VOC_TYPES.map(function(t, k){ return t + ' ' + Math.round(sum[k] / tot * 100) + '%'; }).join(', ') + '">' +
       sum.map(function(v, k){ var p = v / tot * 100; return '<div style="width:' + p.toFixed(1) + '%;background:' + cssv(TYPE_TOK[k]) + '">' + (p >= 9 ? Math.round(p) + '%' : '') + '</div>'; }).join('') + '</div>' +
@@ -497,7 +627,7 @@ function renderPanels(d){
   } else {
     var list = d.alarms.filter(function(x){ return x.seg ? lineOn(SEG_BY_ID[x.seg].line) : stationOn(x.st); });
     a.innerHTML = '<h2>미해제 알람 ' + list.length + '건</h2><div class="rows">' + (list.length ? list.map(function(x){
-      return '<button type="button" class="row" data-alarm="' + x.id + '" aria-current="' + (S.sel && S.sel.alarm === x.id) + '">' +
+      return '<button type="button" class="row" data-alarm="' + x.id + '" aria-current="' + (!!(S.sel && S.sel.alarm === x.id)) + '">' +
         '<span class="name"><span class="sev ' + x.sev + '">' + x.sev + '</span>' + x.where + '</span>' +
         '<span class="val num">11-10 ' + x.at + '</span>' +
         '<span class="sub" style="grid-column:1 / -1">' + x.eq + (x.seg ? ' · 터널 중계기' : '') + ' · 발생 후 미해제</span></button>';
@@ -508,11 +638,11 @@ function renderPanels(d){
 
 function loadChart(d, t){
   var name, peak, kind;
-  if (t.type === 'station'){ name = nm(t.id); peak = d.st[t.id].load; kind = '역사'; }
-  else { var s = SEG_BY_ID[t.id]; name = segName(s); peak = d.seg[t.id].load; kind = '터널'; }
+  if (t.type === 'station'){ name = t.id; peak = d.st[t.id].load; kind = '역사'; }
+  else { name = segName(SEG_BY_ID[t.id]); peak = d.seg[t.id].load; kind = '터널'; }
   if (peak == null) return '<h2>시간대별 부하율 · ' + name + '</h2><p class="note">이 구간은 측정값이 없습니다. 중계기 상태를 확인하세요.</p>';
   var v = series(t.id, peak, S.tech, S.period);
-  var W = 380, H = 190, x0 = 34, y0 = 14, w = W - x0 - 10, h = H - y0 - 30;
+  var CW = 380, CH = 190, x0 = 34, y0 = 14, w = CW - x0 - 10, h = CH - y0 - 30;
   var X = function(i){ return x0 + i * w / 23; }, Y = function(p){ return y0 + h - p / 100 * h; };
   var pts = v.map(function(p, i){ return X(i).toFixed(1) + ',' + Y(p).toFixed(1); }).join(' ');
   var area = 'M' + X(0) + ',' + Y(0) + ' L' + pts.split(' ').join(' L') + ' L' + X(23) + ',' + Y(0) + ' Z';
@@ -523,32 +653,32 @@ function loadChart(d, t){
   g += '<line x1="' + x0 + '" x2="' + (x0 + w) + '" y1="' + Y(70) + '" y2="' + Y(70) + '" stroke-dasharray="2 4" style="stroke:var(--warn)"/>';
   g += '<path d="' + area + '" style="fill:var(--ink);fill-opacity:.07"/><polyline points="' + pts + '" fill="none" stroke-width="2.2" stroke-linejoin="round" style="stroke:var(--ink)"/>';
   g += '<circle cx="' + X(pi) + '" cy="' + Y(v[pi]) + '" r="4" style="fill:' + cssv(loadTok(v[pi])) + ';stroke:var(--surface)" stroke-width="2"/><text x="' + Math.min(X(pi), x0 + w - 60) + '" y="' + (Y(v[pi]) - 9) + '" font-size="11" font-weight="700" style="fill:var(--ink)">' + pi + '시 ' + v[pi] + '%</text>';
-  [0, 6, 12, 18, 23].forEach(function(i){ g += '<text x="' + X(i) + '" y="' + (H - 8) + '" text-anchor="middle" font-size="10" style="fill:var(--ink-2)">' + String(i).padStart(2, '0') + '시</text>'; });
+  [0, 6, 12, 18, 23].forEach(function(i){ g += '<text x="' + X(i) + '" y="' + (CH - 8) + '" text-anchor="middle" font-size="10" style="fill:var(--ink-2)">' + String(i).padStart(2, '0') + '시</text>'; });
   return '<h2>시간대별 부하율 · ' + name + ' <span style="font-weight:400;color:var(--ink-2);font-size:13px">' + kind + (S.period === '24h' ? '' : ' · ' + PERIOD_LABEL[S.period] + ' 시간대 평균') + '</span></h2>' +
-    '<div class="tbl"><svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" style="width:100%;height:auto;display:block;min-width:300px" role="img" aria-label="' + name + ' 시간대별 부하율, 최고 ' + pi + '시 ' + v[pi] + '%">' + g + '</svg></div>';
+    '<div class="tbl"><svg class="chart" viewBox="0 0 ' + CW + ' ' + CH + '" style="width:100%;height:auto;display:block;min-width:300px" role="img" aria-label="' + name + ' 시간대별 부하율, 최고 ' + pi + '시 ' + v[pi] + '%">' + g + '</svg></div>';
 }
 
 /* ---------- 역·구간 상세 ---------- */
 function renderDetail(d){
-  var box = document.getElementById('detail');
-  if (!S.sel){ box.hidden = true; box.innerHTML = ''; return; }
-  box.hidden = false;
+  var det = document.getElementById('detail');
+  if (!S.sel){ det.hidden = true; det.innerHTML = ''; return; }
+  det.hidden = false;
   var h = '';
   if (S.sel.type === 'station'){
     var id = S.sel.id, sd = d.st[id];
     var adj = SEGS.filter(function(s){ return s.a === id || s.b === id; });
     var rows = sd.equip.map(function(e){ return eqRow(d, e.id, e.loc, e.load); })
       .concat(adj.map(function(s){ var sg = d.seg[s.id]; return eqRow(d, sg.rep, '터널 ' + segName(s) + ' · ' + sg.dist + 'km', sg.load); }));
-    var al = d.alarms.filter(function(a){ return a.st === id || (a.seg && (SEG_BY_ID[a.seg].a === id || SEG_BY_ID[a.seg].b === id)); });
+    var al = stationAlarms(d, id);
     var insight = '';
     if (al.length && sd.voc > 0){
       var first = al.map(function(a){ return a.at; }).sort()[0];
-      var k = Math.max(1, Math.min(sd.voc, Math.round(sd.voc * .35)));
-      if (S.period !== '24h') k = Math.max(1, Math.round(k / 6));
-      insight = '<div class="insight"><b>' + first + ' 이후 VOC ' + k + '건 집중</b> → ' + al.map(function(a){ return a.eq; }).join(' · ') + ' 알람과 시간대 일치</div>';
+      var kk = Math.max(1, Math.min(sd.voc, Math.round(sd.voc * .35)));
+      if (S.period !== '24h') kk = Math.max(1, Math.round(kk / 6));
+      insight = '<div class="insight"><b>' + first + ' 이후 VOC ' + kk + '건 집중</b> → ' + al.map(function(a){ return a.eq; }).join(' · ') + ' 알람과 시간대 일치</div>';
     }
-    h = '<div class="detail-head"><div><div class="eyebrow">' + stationLines[id].map(function(l){ return '<span style="display:inline-flex;align-items:center;gap:4px"><span class="dot" style="background:' + cssv(LINE_BY_ID[l].c) + '"></span>' + LINE_BY_ID[l].name + '</span>'; }).join('') + '</div><h2>' + nm(id) + '</h2></div>' +
-      '<button type="button" class="close" id="detail-close" aria-label="상세 닫기">×</button></div>' +
+    h = '<div class="detail-head"><div><div class="lines" style="display:flex;flex-wrap:wrap;gap:4px">' + stationLines[id].map(lineBadge).join('') + '</div><h2>' + id + '</h2></div>' +
+      '<button type="button" class="x" id="detail-close" aria-label="상세 닫기">×</button></div>' +
       '<div class="facts"><div class="fact"><div class="k">부하율 (최대)</div><div class="v num" style="color:' + cssv(loadTok(sd.load)) + '">' + sd.load + '%</div></div>' +
       '<div class="fact"><div class="k">VOC</div><div class="v num">' + sd.voc + '건</div></div>' +
       '<div class="fact"><div class="k">미해제 알람</div><div class="v num"' + (al.length ? ' style="color:var(--crit)"' : '') + '>' + al.length + '건</div></div></div>' +
@@ -558,15 +688,15 @@ function renderDetail(d){
   } else {
     var s = SEG_BY_ID[S.sel.id], sg = d.seg[s.id];
     var sal = d.alarms.filter(function(a){ return a.seg === s.id; });
-    h = '<div class="detail-head"><div><div class="eyebrow"><span style="display:inline-flex;align-items:center;gap:4px"><span class="dot" style="background:' + cssv(LINE_BY_ID[s.line].c) + '"></span>' + LINE_BY_ID[s.line].name + ' · 터널 구간</span></div><h2>' + segName(s) + '</h2></div>' +
-      '<button type="button" class="close" id="detail-close" aria-label="상세 닫기">×</button></div>' +
+    h = '<div class="detail-head"><div><div style="display:flex;gap:4px">' + lineBadge(s.line) + '<span class="sub" style="font-size:12px;color:var(--ink-2)">터널 구간</span></div><h2>' + segName(s) + '</h2></div>' +
+      '<button type="button" class="x" id="detail-close" aria-label="상세 닫기">×</button></div>' +
       '<div class="facts"><div class="fact"><div class="k">부하율</div><div class="v num" style="color:' + cssv(loadTok(sg.load)) + '">' + (sg.load == null ? '—' : sg.load + '%') + '</div></div>' +
       '<div class="fact"><div class="k">중계기</div><div class="v num" style="font-size:15px">' + sg.rep + '</div></div>' +
       '<div class="fact"><div class="k">미해제 알람</div><div class="v num"' + (sal.length ? ' style="color:var(--crit)"' : '') + '>' + sal.length + '건</div></div></div>' +
       (sg.load == null ? '<div class="insight"><b>측정값 없음</b> — 집계에서 제외됨. 중계기 ' + sg.rep + ' 상태를 확인하세요.</div>' : '') +
-      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="chip" data-pick="station|' + s.a + '">' + nm(s.a) + ' 보기</button><button type="button" class="chip" data-pick="station|' + s.b + '">' + nm(s.b) + ' 보기</button></div>';
+      '<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="chip" data-pick="station|' + s.a + '">' + s.a + ' 보기</button><button type="button" class="chip" data-pick="station|' + s.b + '">' + s.b + ' 보기</button></div>';
   }
-  box.innerHTML = h;
+  det.innerHTML = h;
 }
 function eqRow(d, id, loc, load){
   var sev = d.eqSev[id];
@@ -575,16 +705,19 @@ function eqRow(d, id, loc, load){
   return '<tr><td class="num">' + id + '</td><td>' + loc + '</td><td class="r num" style="color:' + cssv(loadTok(load)) + '">' + (load == null ? '—' : load + '%') + '</td><td>' + stat + '</td></tr>';
 }
 
-/* ---------- 지도 이동 ---------- */
-function focusOn(id){
-  var p = px(id), w = 480, h = 330;
-  S.vb = {x:clamp(p[0] - w / 2, -100, 960 - w + 100), y:clamp(p[1] - h / 2, -100, 660 - h + 100), w:w, h:h};
+/* ---------- 지도 이동·확대 ---------- */
+function focusOn(id, w){
+  var p = P[id]; w = w || Math.min(S.vb.w, 420); var h = w * H / W;
+  S.vb = {x:p[0] - w / 2, y:p[1] - h / 2, w:w, h:h};
 }
+var zoomRaf = 0;
 function zoom(f, cx, cy){
-  var v = S.vb, nw = clamp(v.w * f, 240, 1200), nh = nw * 660 / 960;
+  var v = S.vb, nw = clamp(v.w * f, 140, W * 1.2), nh = nw * H / W;
   if (cx == null){ cx = v.x + v.w / 2; cy = v.y + v.h / 2; }
   var rx = (cx - v.x) / v.w, ry = (cy - v.y) / v.h;
-  S.vb = {x:cx - rx * nw, y:cy - ry * nh, w:nw, h:nh}; setVB();
+  S.vb = {x:cx - rx * nw, y:cy - ry * nh, w:nw, h:nh};
+  setVB();
+  if (!zoomRaf) zoomRaf = requestAnimationFrame(function(){ zoomRaf = 0; renderMap(getData(S.tech, S.period)); positionPop(); });
 }
 
 /* ---------- 이벤트 ---------- */
@@ -599,9 +732,9 @@ bindSeg('ctl-tech', 'tech'); bindSeg('ctl-metric', 'metric'); bindSeg('ctl-perio
 document.getElementById('line-chips').addEventListener('click', function(e){
   var b = e.target.closest('button'); if (!b) return; S.line = b.dataset.line; render();
 });
-document.getElementById('zoom-in').addEventListener('click', function(){ zoom(.75); });
-document.getElementById('zoom-out').addEventListener('click', function(){ zoom(1 / .75); });
-document.getElementById('zoom-reset').addEventListener('click', function(){ S.vb = Object.assign({}, BASE); setVB(); });
+document.getElementById('zoom-in').addEventListener('click', function(){ zoom(.7); });
+document.getElementById('zoom-out').addEventListener('click', function(){ zoom(1 / .7); });
+document.getElementById('zoom-reset').addEventListener('click', function(){ S.vb = Object.assign({}, BASE); render(); });
 
 function pick(type, id, opts){
   S.sel = {type:type, id:id};
@@ -620,26 +753,27 @@ document.getElementById('aside').addEventListener('click', function(e){
   }
 });
 
-var drag = null;
+// 드래그 이동과 클릭 구분
+var drag = null, justDragged = false;
 function svgPt(e){ var r = svg.getBoundingClientRect(); return [S.vb.x + (e.clientX - r.left) / r.width * S.vb.w, S.vb.y + (e.clientY - r.top) / r.height * S.vb.h]; }
-svg.addEventListener('pointerdown', function(e){ drag = {sx:e.clientX, sy:e.clientY, vb:Object.assign({}, S.vb), moved:false, id:e.pointerId}; });
+svg.addEventListener('pointerdown', function(e){ if (e.button !== 0) return; drag = {sx:e.clientX, sy:e.clientY, vb:Object.assign({}, S.vb), moved:false, id:e.pointerId}; justDragged = false; });
 svg.addEventListener('pointermove', function(e){
   if (!drag) return;
   var dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
   if (!drag.moved && Math.abs(dx) + Math.abs(dy) > 5){ drag.moved = true; svg.classList.add('dragging'); try { svg.setPointerCapture(drag.id); } catch (er) {} }
   if (drag.moved){ var r = svg.getBoundingClientRect(); S.vb.x = drag.vb.x - dx / r.width * drag.vb.w; S.vb.y = drag.vb.y - dy / r.height * drag.vb.h; setVB(); }
 });
-function endDrag(e){
-  if (!drag) return;
-  var moved = drag.moved; drag = null; svg.classList.remove('dragging');
-  if (moved || e.type !== 'pointerup') return;
-  var t = document.elementFromPoint(e.clientX, e.clientY);
-  var st = t && t.closest && t.closest('[data-st]'), sg = t && t.closest && t.closest('[data-seg]');
-  if (st) pick('station', st.getAttribute('data-st'));
-  else if (sg) pick('segment', sg.getAttribute('data-seg'));
-}
+function endDrag(){ if (!drag) return; justDragged = drag.moved; drag = null; svg.classList.remove('dragging'); }
 svg.addEventListener('pointerup', endDrag);
 svg.addEventListener('pointercancel', endDrag);
+svg.addEventListener('click', function(e){
+  if (justDragged){ justDragged = false; return; }
+  var st = e.target.closest && e.target.closest('[data-st]');
+  var sg = e.target.closest && e.target.closest('[data-seg]');
+  if (st) pick('station', st.getAttribute('data-st'));
+  else if (sg) pick('segment', sg.getAttribute('data-seg'));
+  else if (S.sel){ S.sel = null; render(); }
+});
 svg.addEventListener('wheel', function(e){
   if (!e.ctrlKey && !e.metaKey) return;
   e.preventDefault(); var p = svgPt(e); zoom(e.deltaY > 0 ? 1.12 : 1 / 1.12, p[0], p[1]);
@@ -647,11 +781,15 @@ svg.addEventListener('wheel', function(e){
 svg.addEventListener('keydown', function(e){
   if (e.key !== 'Enter' && e.key !== ' ') return;
   var st = e.target.closest && e.target.closest('[data-st]');
-  if (st){ e.preventDefault(); pick('station', st.getAttribute('data-st')); var n = svg.querySelector('[data-st="' + st.getAttribute('data-st') + '"]'); if (n) n.focus(); }
+  if (st){ e.preventDefault(); var id = st.getAttribute('data-st'); pick('station', id); var n = svg.querySelector('[data-st="' + id + '"]'); if (n) n.focus(); }
 });
+document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && S.sel){ S.sel = null; render(); } });
+window.addEventListener('resize', positionPop);
 window.addEventListener('hashchange', function(){ readHash(); render(); });
 
 readHash();
 render();
 })();
 </script>
+</body>
+</html>
