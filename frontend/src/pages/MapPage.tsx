@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import TopBar from '../components/TopBar';
 import SummaryBar from '../components/SummaryBar';
 import LineFilter from '../components/LineFilter';
@@ -6,6 +6,9 @@ import SubwayMap from '../components/SubwayMap';
 import Legend from '../components/Legend';
 import SidePanel from '../components/SidePanel';
 import DetailPanel from '../components/DetailPanel';
+import DataUpload from '../components/DataUpload';
+import HowToUse from '../components/HowToUse';
+import { applyPatch, type DataPatch } from '../lib/upload';
 import { useUrlState } from '../hooks/useUrlState';
 import { useMetrics } from '../hooks/useMetrics';
 import { BASE_VB, SEG_BY_ID } from '../lib/network';
@@ -13,11 +16,21 @@ import { zoomViewBox, focusViewBox } from '../lib/viewbox';
 import type { Alarm, LineId, PickHandler, Selection, ViewBox, ViewParams } from '../types';
 
 const AS_OF = '2026-11-10 22:00';
+const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+// '2026-11-10 22:00' → '2026.11.10 (화) 22:00 기준'
+function formatAsOf(s: string): string {
+  const [d, t] = s.split(' ');
+  const [y, m, day] = d.split('-').map(Number);
+  const dow = DOW[new Date(y, m - 1, day).getDay()];
+  return `${d.replace(/-/g, '.')} (${dow}) ${t} 기준`;
+}
 
 // 화면 ①~④: 하나의 노선도에서 기술·지표·기간만 바꿔 본다.
 export default function MapPage() {
   const [{ tech, metric, period }, setParam] = useUrlState();
-  const { data, error, loading, retry } = useMetrics(tech, period);
+  const { data: baseData, error, loading, retry } = useMetrics(tech, period);
+  const [upload, setUpload] = useState<{ name: string; patch: DataPatch } | null>(null);
+  const data = useMemo(() => (baseData && upload ? applyPatch(baseData, upload.patch) : baseData), [baseData, upload]);
   const [line, setLine] = useState<LineId>('all');
   const [sel, setSel] = useState<Selection | null>(null);
   const [vb, setVb] = useState<ViewBox>(BASE_VB);
@@ -56,7 +69,20 @@ export default function MapPage() {
 
   return (
     <div className="wrap">
-      <TopBar tech={tech} metric={metric} period={period} onChange={onChange} asOf={AS_OF} />
+      <TopBar
+        tech={tech}
+        metric={metric}
+        period={period}
+        onChange={onChange}
+        asOf={upload ? `업로드 데이터 · ${upload.name}` : formatAsOf(AS_OF)}
+        extra={
+          <DataUpload
+            fileName={upload?.name ?? null}
+            onLoad={(r, name) => { setSel(null); setUpload({ name, patch: r.patch }); }}
+            onReset={() => { setSel(null); setUpload(null); }}
+          />
+        }
+      />
 
       {error && (
         <div className="error" role="alert">
@@ -98,8 +124,8 @@ export default function MapPage() {
               />
               <Legend metric={metric} />
               <p className="note">
-                가상 데이터 · 서울 시내 구간 1–9호선과 주요 광역 노선 · 노선 순서와 색은 실제 기준, 역 좌표는 근사값(공공데이터 적재 시 교체).
-                역을 누르면 정보 카드가 열립니다. 드래그로 이동, Ctrl+휠 또는 버튼으로 확대하면 모든 역 이름이 보입니다.
+                {upload ? `업로드한 데이터(${upload.name})가 가상 데이터 위에 반영되어 있습니다` : '가상 데이터'} · 서울 시내 구간 1–9호선과 주요 광역 노선 · 노선 순서와 색은 실제 기준, 역 좌표는 근사값(공공데이터 적재 시 교체).
+                역을 누르면 정보 카드가 열립니다. 지도 위에서 스크롤하면 확대·축소, 드래그로 이동하며, 확대하면 모든 역 이름이 보입니다.
               </p>
             </section>
 
@@ -108,6 +134,7 @@ export default function MapPage() {
               <SidePanel metric={metric} data={data} line={line} sel={sel} tech={tech} period={period} onPick={pick} onAlarm={pickAlarm} />
             </aside>
           </div>
+          <HowToUse />
         </>
       )}
     </div>

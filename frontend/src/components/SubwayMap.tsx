@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, type MouseEvent, type PointerEvent, type ReactElement } from 'react';
 import { SEGS, STATIONS, POS, LINE_BY_ID, SEG_BY_ID, stationLines, segName, MAP_W, MAP_H } from '../lib/network';
-import { METRIC_LABEL, SEV_TOK, cssv, loadTok, worstSev, LOAD_WARN } from '../lib/constants';
+import { METRIC_LABEL, SEV_TOK, cssv, loadTok, worstSev, clamp, LOAD_WARN } from '../lib/constants';
 import { zoomViewBox } from '../lib/viewbox';
 import { useElementSize } from '../hooks/useElementSize';
 import StationPopover from './StationPopover';
@@ -214,18 +214,21 @@ export default function SubwayMap({ data, metric, line, sel, vb, onViewBoxChange
     else if (sel) onClear();
   };
 
-  // Ctrl(또는 ⌘)+휠 확대. 페이지 스크롤을 막지 않도록 Ctrl 없을 때는 그대로 둔다.
+  // 지도 위에서 휠(스크롤)을 굴리면 커서 위치 기준으로 확대/축소. 트랙패드 핀치(ctrlKey)도 같은 경로.
   useEffect(() => {
     const svg = svgRef.current;
     if (!svg) return undefined;
     const onWheel = (e: WheelEvent) => {
-      if (!e.ctrlKey && !e.metaKey) return;
+      if (e.deltaY === 0) return;
       e.preventDefault();
       const r = svg.getBoundingClientRect();
       const cur = vbRef.current;
       const cx = cur.x + ((e.clientX - r.left) / r.width) * cur.w;
       const cy = cur.y + ((e.clientY - r.top) / r.height) * cur.h;
-      onViewBoxChange(zoomViewBox(cur, e.deltaY > 0 ? 1.12 : 1 / 1.12, cx, cy));
+      // 마우스 휠은 한 칸(약 100px)에 약 16%, 핀치는 작은 delta가 연속으로 들어오므로 더 민감하게
+      const dy = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
+      const factor = Math.exp(clamp(dy, -120, 120) * (e.ctrlKey ? 0.01 : 0.0015));
+      onViewBoxChange(zoomViewBox(cur, factor, cx, cy));
     };
     svg.addEventListener('wheel', onWheel, { passive: false });
     return () => svg.removeEventListener('wheel', onWheel);
@@ -239,7 +242,7 @@ export default function SubwayMap({ data, metric, line, sel, vb, onViewBoxChange
         viewBox={`${vb.x} ${vb.y} ${vb.w} ${vb.h}`}
         style={{ aspectRatio: `${MAP_W} / ${MAP_H}` }}
         role="group"
-        aria-label="서울 지하철 무선망 노선도"
+        aria-label="서울 지하철 무선망 노선도. 마우스 휠로 확대·축소, 드래그로 이동"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={endDrag}
@@ -253,6 +256,15 @@ export default function SubwayMap({ data, metric, line, sel, vb, onViewBoxChange
         <g>{layers.stations}</g>
         <g>{layers.labels}</g>
       </svg>
+      <div className="map-hint" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <rect x="6" y="2.5" width="12" height="19" rx="6" />
+          <path d="M12 6.5v4" />
+        </svg>
+        <span><b>스크롤</b>로 확대·축소</span>
+        <span className="sep" />
+        <span><b>드래그</b>로 이동</span>
+      </div>
       {sel && sel.type === 'station' && (
         <StationPopover
           stationId={sel.id}

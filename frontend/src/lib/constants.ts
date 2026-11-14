@@ -9,12 +9,6 @@ export const METRIC_LABEL: Record<Metric, string> = { voc: 'VOC', load: '부하�
 export const PERIOD_LABEL: Record<Period, string> = { '24h': '최근 24시간', '7d': '최근 7일', '30d': '최근 30일' };
 export const PERIOD_SHORT: Record<Period, string> = { '24h': '24시간', '7d': '7일', '30d': '30일' };
 
-export const HEADLINE: Record<Metric, string> = {
-  load: '선이 굵고 붉을수록 부하가 높습니다',
-  voc: '원이 클수록 민원이 많습니다',
-  alarm: '표식이 있는 곳에 미해제 알람이 있습니다',
-};
-
 export const VOC_TYPES = ['속도저하', '끊김', '접속불가', '기타'] as const;
 export const TYPE_TOK: readonly CssToken[] = ['--t1', '--t2', '--t3', '--t4'];
 
