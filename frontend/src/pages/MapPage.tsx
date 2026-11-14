@@ -8,6 +8,9 @@ import SidePanel from '../components/SidePanel';
 import DetailPanel from '../components/DetailPanel';
 import DataUpload from '../components/DataUpload';
 import HowToUse from '../components/HowToUse';
+import StationSearch from '../components/StationSearch';
+import TopStations from '../components/TopStations';
+import { parseYmdHm } from '../lib/date';
 import { applyPatch, type DataPatch } from '../lib/upload';
 import { useUrlState } from '../hooks/useUrlState';
 import { useMetrics } from '../hooks/useMetrics';
@@ -15,26 +18,32 @@ import { BASE_VB, SEG_BY_ID } from '../lib/network';
 import { zoomViewBox, focusViewBox } from '../lib/viewbox';
 import type { Alarm, LineId, PickHandler, Selection, ViewBox, ViewParams } from '../types';
 
-const AS_OF = '2026-11-10 22:00';
-const DOW = ['일', '월', '화', '수', '목', '금', '토'];
-// '2026-11-10 22:00' → '2026.11.10 (화) 22:00 기준'
-function formatAsOf(s: string): string {
-  const [d, t] = s.split(' ');
-  const [y, m, day] = d.split('-').map(Number);
-  const dow = DOW[new Date(y, m - 1, day).getDay()];
-  return `${d.replace(/-/g, '.')} (${dow}) ${t} 기준`;
-}
+const AS_OF = parseYmdHm('2026-11-10 22:00');
 
 // 화면 ①~④: 하나의 노선도에서 기술·지표·기간만 바꿔 본다.
 export default function MapPage() {
   const [{ tech, metric, period }, setParam] = useUrlState();
   const { data: baseData, error, loading, retry } = useMetrics(tech, period);
-  const [upload, setUpload] = useState<{ name: string; patch: DataPatch } | null>(null);
+  const [upload, setUpload] = useState<{ name: string; at: Date; patch: DataPatch } | null>(null);
   const data = useMemo(() => (baseData && upload ? applyPatch(baseData, upload.patch) : baseData), [baseData, upload]);
   const [line, setLine] = useState<LineId>('all');
   const [sel, setSel] = useState<Selection | null>(null);
   const [vb, setVb] = useState<ViewBox>(BASE_VB);
   const detailRef = useRef<HTMLElement>(null);
+  const mapRef = useRef<HTMLElement>(null);
+
+  // 검색·TOP 10에서 역을 고르면 지도를 그 역으로 옮기고 지도가 보이게 스크롤
+  const goStation = (id: string) => {
+    setSel({ type: 'station', id });
+    setVb((v) => focusViewBox(v, id, 300));
+    const el = mapRef.current;
+    if (!el) return;
+    const top = el.getBoundingClientRect().top;
+    if (top < 0 || top > window.innerHeight * 0.5) {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    }
+  };
 
   const onChange = <K extends keyof ViewParams>(key: K, value: ViewParams[K]) => {
     if (key === 'metric' && sel && sel.alarm) setSel(null);
@@ -74,11 +83,12 @@ export default function MapPage() {
         metric={metric}
         period={period}
         onChange={onChange}
-        asOf={upload ? `업로드 데이터 · ${upload.name}` : formatAsOf(AS_OF)}
-        extra={
+        search={<StationSearch onSelect={goStation} />}
+        right={
           <DataUpload
+            latest={upload ? upload.at : AS_OF}
             fileName={upload?.name ?? null}
-            onLoad={(r, name) => { setSel(null); setUpload({ name, patch: r.patch }); }}
+            onLoad={(r, name) => { setSel(null); setUpload({ name, at: new Date(), patch: r.patch }); }}
             onReset={() => { setSel(null); setUpload(null); }}
           />
         }
@@ -97,7 +107,7 @@ export default function MapPage() {
         <>
           <SummaryBar data={data} period={period} />
           <div className="main" aria-busy={loading}>
-            <section className="mapcol" aria-label="노선도">
+            <section className="mapcol" aria-label="노선도" ref={mapRef}>
               <div className="mapbar">
                 <LineFilter value={line} onChange={setLine} />
                 <div className="zoom">
@@ -134,6 +144,7 @@ export default function MapPage() {
               <SidePanel metric={metric} data={data} line={line} sel={sel} tech={tech} period={period} onPick={pick} onAlarm={pickAlarm} />
             </aside>
           </div>
+          <TopStations data={data} metric={metric} line={line} sel={sel} onSelect={goStation} />
           <HowToUse />
         </>
       )}
